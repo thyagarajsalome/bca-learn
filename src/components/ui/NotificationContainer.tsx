@@ -14,13 +14,16 @@ export default function NotificationContainer() {
   if (notifications.length === 0) return null;
 
   return (
-    <div className="fixed top-20 right-4 z-50 space-y-2 max-w-sm">
+    // UPDATED: Moved to bottom-right and added pointer-events-none
+    <div className="fixed bottom-4 right-4 z-50 space-y-2 max-w-sm pointer-events-none">
       {notifications.map((notification) => (
-        <NotificationItem
-          key={notification.id}
-          notification={notification}
-          onClose={() => removeNotification(notification.id)}
-        />
+        // UPDATED: Added pointer-events-auto to specific items
+        <div key={notification.id} className="pointer-events-auto">
+          <NotificationItem
+            notification={notification}
+            onClose={() => removeNotification(notification.id)}
+          />
+        </div>
       ))}
     </div>
   );

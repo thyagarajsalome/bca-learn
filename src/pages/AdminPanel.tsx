@@ -163,8 +163,14 @@ function ModulesManagement() {
       const { error } = await supabase
         .from('modules')
         .insert({
-          ...formData,
-          created_at: new Date().toISOString(),
+          title: formData.title,
+          description: formData.description,
+          icon: formData.icon,
+          color: formData.color,
+          semester: formData.semester,
+          order_index: formData.order_index,
+          is_published: formData.is_published,
+          // UPDATED: Removed manual created_at to let database handle it
         })
         .select()
         .single();
@@ -189,6 +195,7 @@ function ModulesManagement() {
       loadModules();
 
     } catch (err) {
+      console.error("Create Module Error:", err); // Added error logging
       addNotification({
         type: 'error',
         message: err instanceof Error ? err.message : 'Failed to create module'
@@ -360,7 +367,8 @@ function ModulesManagement() {
               >
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-[#e8e0] border-t-transparent rounded-full animate-spin" />
+                    {/* UPDATED: Fixed hex color typo border-[#e8e0] -> border-white */}
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>Creating...</span>
                   </>
                 ) : (
