@@ -54,8 +54,9 @@ export type Database = {
           module_id: string;
           title: string;
           description: string | null;
-          type: 'pdf' | 'notion' | 'video' | 'external';
+          type: 'pdf' | 'notion' | 'video' | 'external' | 'markdown';
           source_url: string | null;
+          content: string | null;
           order_index: number;
           duration_minutes: number | null;
           page_count: number | null;
@@ -67,8 +68,9 @@ export type Database = {
           module_id: string;
           title: string;
           description?: string | null;
-          type: 'pdf' | 'notion' | 'video' | 'external';
+          type: 'pdf' | 'notion' | 'video' | 'external' | 'markdown';
           source_url?: string | null;
+          content?: string | null;
           order_index?: number;
           duration_minutes?: number | null;
           page_count?: number | null;
@@ -80,8 +82,9 @@ export type Database = {
           module_id?: string;
           title?: string;
           description?: string | null;
-          type?: 'pdf' | 'notion' | 'video' | 'external';
+          type?: 'pdf' | 'notion' | 'video' | 'external' | 'markdown';
           source_url?: string | null;
+          content?: string | null;
           order_index?: number;
           duration_minutes?: number | null;
           page_count?: number | null;

@@ -1,3 +1,4 @@
+import MarkdownViewer from './MarkdownViewer';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLesson } from '../../hooks/useLessons';
@@ -125,9 +126,19 @@ export default function LessonPage() {
         </div>
       </div>
 
+     // ADD THIS IMPORT AT THE TOP:
+import MarkdownViewer from './MarkdownViewer';
+
+// ... (scroll down to the return statement)
+
       {/* Lesson Content */}
       <div className="flex-1 overflow-hidden">
-        {lesson.type === 'pdf' ? (
+        {lesson.type === 'markdown' ? (
+          <MarkdownViewer 
+            content={lesson.content || ''} 
+            title={lesson.title} 
+          />
+        ) : lesson.type === 'pdf' ? (
           <PDFViewer
             url={lesson.source_url}
             title={lesson.title}
