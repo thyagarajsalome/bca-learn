@@ -1,0 +1,219 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { useModules } from '../hooks/useModules';
+import { useLessons } from '../hooks/useLessons';
+import { useProgress } from '../hooks/useProgress';
+import Navbar from '../components/layout/Navbar';
+import ModuleAccordion from '../components/modules/ModuleAccordion';
+import SearchBar from '../components/ui/SearchBar';
+import OverallProgress from '../components/progress/OverallProgress';
+import Skeleton from '../components/ui/Skeleton';
+import { BookOpen, TrendingUp } from 'lucide-react';
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
+  const { data: modules, isLoading: modulesLoading } = useModules();
+  const { data: allLessons } = useLessons();
+  const { progressMap, overallPercent, calculateModuleProgress } = useProgress(user?.id || '');
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter modules based on search query
+  const filteredModules = modules?.filter(module =>
+    module.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    module.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
+  // Calculate module progress
+  const moduleProgressData = allLessons ? calculateModuleProgress(allLessons) : {};
+
+  // Get module progress with additional info
+  const modulesWithProgress = filteredModules.map(module => ({
+    ...module,
+    progress: moduleProgressData[module.id] || { completed: 0, total: 0 },
+  }));
+
+  // Get continue learning items
+  const continueLearning = allLessons
+    ?.filter(lesson => progressMap[lesson.id] === 'in_progress')
+    .slice(0, 3)
+    .map(lesson => {
+      const module = modules?.find(m => m.id === lesson.module_id);
+      return {
+        id: lesson.id,
+        title: lesson.title,
+        module: module?.title || 'Unknown Module',
+        progress: progressMap[lesson.id] === 'completed' ? 100 : 50,
+      };
+    }) || [];
+
+  const handleLessonClick = (lesson: any) => {
+    navigate(`/lesson/${lesson.id}`);
+  };
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  if (modulesLoading) {
+    return (
+      <div className="min-h-screen bg-[#0c0f1a]">
+        <Navbar user={profile ? { ...profile, role: profile.role } : undefined} onNavigate={handleNavigate} onLogout={handleLogout} />
+        <div className="pt-20 px-6">
+          <div className="max-w-7xl mx-auto">
+            <Skeleton className="h-8 w-64 mb-6" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map(i => (
+                <Skeleton key={i} className="h-64" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0c0f1a]">
+      <Navbar user={profile || undefined} onNavigate={handleNavigate} onLogout={handleLogout} />
+
+      <div className="pt-20">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-[#e8eaf6] mb-2">
+              Welcome back, {profile?.name || 'Learner'}!
+            </h1>
+            <p className="text-[#8890b5]">Continue your learning journey</p>
+          </div>
+
+          {/* Search */}
+          <div className="mb-8">
+            <SearchBar
+              placeholder="Search modules or lessons..."
+              onSearch={setSearchQuery}
+              className="max-w-2xl"
+            />
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-[#13172a] rounded-xl p-6 border border-[#1e2340]">
+                  <div className="flex items-center justify-between mb-2">
+                    <BookOpen className="w-5 h-5 text-[#5b6af0]" />
+                    <span className="text-2xl font-bold text-[#e8eaf6]">{modules?.length || 0}</span>
+                  </div>
+                  <p className="text-sm text-[#8890b5]">Total Modules</p>
+                </div>
+                <div className="bg-[#13172a] rounded-xl p-6 border border-[#1e2340]">
+                  <div className="flex items-center justify-between mb-2">
+                    <TrendingUp className="w-5 h-5 text-[#4ecca3]" />
+                    <span className="text-2xl font-bold text-[#e8eaf6]">{overallPercent}%</span>
+                  </div>
+                  <p className="text-sm text-[#8890b5]">Overall Progress</p>
+                </div>
+                <div className="bg-[#13172a] rounded-xl p-6 border border-[#1e2340]">
+                  <div className="flex items-center justify-between mb-2">
+                    <BookOpen className="w-5 h-5 text-[#f0b15b]" />
+                    <span className="text-2xl font-bold text-[#e8eaf6]">{allLessons?.length || 0}</span>
+                  </div>
+                  <p className="text-sm text-[#8890b5]">Total Lessons</p>
+                </div>
+              </div>
+
+              {/* Modules Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-[#e8eaf6]">
+                    All Modules ({filteredModules.length})
+                  </h2>
+                </div>
+
+                {modulesWithProgress.length > 0 ? (
+                  <div className="space-y-4">
+                    {modulesWithProgress.map((module) => {
+                      const moduleLessons = allLessons?.filter(l => l.module_id === module.id) || [];
+                      return (
+                        <ModuleAccordion
+                          key={module.id}
+                          module={module}
+                          lessons={moduleLessons}
+                          progressMap={progressMap}
+                          onLessonClick={handleLessonClick}
+                          isDefaultOpen={module.progress.completed > 0}
+                        />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-[#13172a] rounded-xl border border-[#1e2340]">
+                    <BookOpen className="w-12 h-12 text-[#8890b5] mx-auto mb-4" />
+                    <p className="text-[#8890b5]">
+                      {searchQuery ? 'No modules found matching your search' : 'No modules available yet'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <OverallProgress
+                overallPercent={overallPercent}
+                moduleProgress={Object.entries(moduleProgressData).reduce((acc, [moduleId, data]) => {
+                  const module = modules?.find(m => m.id === moduleId);
+                  if (module) {
+                    acc[moduleId] = {
+                      ...data,
+                      title: module.title,
+                      color: module.color,
+                    };
+                  }
+                  return acc;
+                }, {} as any)}
+              />
+
+              {continueLearning.length > 0 && (
+                <div className="bg-[#13172a] rounded-xl border border-[#1e2340] p-6">
+                  <h3 className="text-lg font-semibold text-[#e8eaf6] mb-4 flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2 text-[#f0b15b]" />
+                    Continue Learning
+                  </h3>
+                  <div className="space-y-3">
+                    {continueLearning.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => handleLessonClick({ id: item.id })}
+                        className="w-full bg-[#0c0f1a] hover:bg-[#1e2340] rounded-lg p-4 text-left transition-colors group"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-[#e8eaf6] group-hover:text-[#5b6af0] transition-colors">
+                              {item.title}
+                            </div>
+                            <div className="text-xs text-[#8890b5] mt-1">{item.module}</div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

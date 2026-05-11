@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0c0f1a] text-[#e8eaf6] antialiased;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #1e2340 #0c0f1a;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: #0c0f1a;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #1e2340;
+    border-radius: 4px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #2a314a;
+  }
+}
+
+@layer components {
+  /* Custom component styles can be added here */
+}
