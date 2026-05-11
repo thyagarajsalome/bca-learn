@@ -475,20 +475,12 @@ function UsersManagement() {
 
       if (profilesError) throw profilesError;
 
-      // Get auth users to match with profiles
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-
-      if (authError) throw authError;
-
-      // Combine profiles with auth user data
-      const combinedUsers = profiles.map(profile => {
-        const authUser = authUsers.users.find((u: any) => u.id === profile.id);
-        return {
-          ...profile,
-          email: authUser?.email || 'Unknown',
-          last_sign_in: authUser?.last_sign_in_at || null,
-        };
-      });
+      // Map profiles directly (Emails are securely hidden from client access by default)
+      const combinedUsers = profiles.map(profile => ({
+        ...profile,
+        email: 'Protected by Supabase', 
+        last_sign_in: profile.created_at,
+      }));
 
       setUsers(combinedUsers);
     } catch (err) {
@@ -501,9 +493,9 @@ function UsersManagement() {
     }
   };
 
-  useState(() => {
+  useEffect(() => {
     loadUsers();
-  });
+  }, []);
 
   const changeUserRole = async (userId: string, newRole: string) => {
     try {
