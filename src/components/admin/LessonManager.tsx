@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useModules } from '../../hooks/useModules';
 import { supabase } from '../../lib/supabase';
 import { useNotifications } from '../../contexts/NotificationContext';
@@ -55,10 +56,10 @@ export default function LessonManager() {
     }
   };
 
-  // Load lessons on mount
-  useState(() => {
+  // ✅ Fix: Use useEffect with an empty dependency array
+  useEffect(() => {
     loadLessons();
-  });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

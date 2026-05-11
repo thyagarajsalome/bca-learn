@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { BookOpen, Upload, Users, LogOut, Plus, X } from 'lucide-react';
@@ -171,9 +172,9 @@ function ModulesManagement() {
     }
   };
 
-  useState(() => {
+  useEffect(() => {
     loadModules();
-  });
+  }, [] );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
