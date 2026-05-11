@@ -60,7 +60,7 @@ export default function LessonPage() {
 
   if (!lesson) {
     return (
-      <div className="min-h-screen bg-[#0c0f1a] flex items-center justify-center text-center">
+      <div className="min-h-screen bg-[#0c0f1a] flex items-center justify-center text-center px-4">
         <div>
           <p className="text-[#8890b5] mb-4">Lesson not found</p>
           <button onClick={() => navigate('/dashboard')} className="text-[#5b6af0] hover:underline">
@@ -72,26 +72,30 @@ export default function LessonPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0c0f1a] flex flex-col">
-      {/* Top Bar */}
-      <div className="bg-[#13172a] border-b border-[#1e2340] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+    <div className="h-screen bg-[#0c0f1a] flex flex-col overflow-hidden">
+      {/* Top Header - Stays fixed at the top */}
+      <div className="bg-[#13172a] border-b border-[#1e2340] px-4 py-3 md:px-6 md:py-4 flex-shrink-0 z-10 shadow-sm">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          
+          <div className="flex items-start sm:items-center space-x-3 md:space-x-4 min-w-0">
             <button
               onClick={() => navigate(`/module/${lesson.module_id}`)}
-              className="p-2 rounded-lg bg-[#0c0f1a] hover:bg-[#1e2340] text-[#8890b5] hover:text-[#e8eaf6] transition-colors"
+              className="p-2 -ml-2 rounded-lg bg-transparent hover:bg-[#1e2340] text-[#8890b5] hover:text-[#e8eaf6] transition-colors flex-shrink-0"
+              aria-label="Back to module"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div>
-              <h1 className="text-xl font-semibold text-[#e8eaf6]">{lesson.title}</h1>
-              <div className="flex items-center space-x-2 text-sm text-[#8890b5]">
-                <span>{moduleData?.module.title}</span>
+            <div className="min-w-0">
+              <h1 className="text-base md:text-xl font-semibold text-[#e8eaf6] truncate leading-tight">
+                {lesson.title}
+              </h1>
+              <div className="flex items-center space-x-2 text-xs md:text-sm text-[#8890b5] mt-0.5">
+                <span className="truncate max-w-[150px] md:max-w-xs">{moduleData?.module.title}</span>
                 {lesson.duration_minutes && (
                   <>
                     <span>•</span>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
+                    <div className="flex items-center flex-shrink-0">
+                      <Clock className="w-3.5 h-3.5 mr-1" />
                       <span>{lesson.duration_minutes} min</span>
                     </div>
                   </>
@@ -103,41 +107,44 @@ export default function LessonPage() {
           <button
             onClick={handleMarkComplete}
             disabled={isCompleted}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center justify-center space-x-2 px-4 py-2 text-sm md:text-base rounded-lg font-medium transition-colors flex-shrink-0 ${
               isCompleted
-                ? 'bg-[#4ecca3]/20 text-[#4ecca3] cursor-default'
-                : 'bg-[#5b6af0] hover:bg-[#4a5ae0] text-white'
+                ? 'bg-[#4ecca3]/10 text-[#4ecca3] cursor-default border border-[#4ecca3]/20'
+                : 'bg-[#5b6af0] hover:bg-[#4a5ae0] text-white shadow-md'
             }`}
           >
-            <CheckCircle2 className="w-5 h-5" />
+            <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
             <span>{isCompleted ? 'Completed' : 'Mark as Complete'}</span>
           </button>
         </div>
       </div>
 
-      {/* Lesson Content */}
-      <div className="flex-1 overflow-hidden">
+      {/* Main Content Area - Scrolls independently */}
+      <div className="flex-1 overflow-hidden relative">
         <MarkdownViewer content={lesson.content || ''} title={lesson.title} />
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="bg-[#13172a] border-t border-[#1e2340] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      {/* Bottom Navigation - Fixed at the bottom */}
+      <div className="bg-[#13172a] border-t border-[#1e2340] px-4 py-3 md:px-6 md:py-4 flex-shrink-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
           <button
             onClick={() => navigateToLesson('prev')}
             disabled={!canNavigatePrev}
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#0c0f1a] hover:bg-[#1e2340] text-[#8890b5] transition-colors disabled:opacity-50"
+            className="flex items-center justify-center space-x-1 md:space-x-2 px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-[#0c0f1a] border border-[#1e2340] hover:bg-[#1e2340] text-[#8890b5] hover:text-[#e8eaf6] transition-all disabled:opacity-40 disabled:hover:bg-[#0c0f1a] text-sm md:text-base"
           >
-            <ChevronLeft className="w-5 h-5" />
-            <span>Previous Lesson</span>
+            <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Previous Lesson</span>
+            <span className="sm:hidden">Prev</span>
           </button>
+          
           <button
             onClick={() => navigateToLesson('next')}
             disabled={!canNavigateNext}
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#0c0f1a] hover:bg-[#1e2340] text-[#8890b5] transition-colors disabled:opacity-50"
+            className="flex items-center justify-center space-x-1 md:space-x-2 px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-[#5b6af0]/10 border border-[#5b6af0]/30 hover:bg-[#5b6af0]/20 text-[#5b6af0] hover:text-[#7b88f5] transition-all disabled:opacity-40 disabled:hover:bg-[#5b6af0]/10 text-sm md:text-base"
           >
-            <span>Next Lesson</span>
-            <ChevronRight className="w-5 h-5" />
+            <span className="hidden sm:inline">Next Lesson</span>
+            <span className="sm:hidden">Next</span>
+            <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
           </button>
         </div>
       </div>
