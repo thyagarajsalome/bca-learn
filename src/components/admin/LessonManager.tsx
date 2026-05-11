@@ -5,8 +5,6 @@ import { supabase } from '../../lib/supabase';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { Save, X, BookOpen, Clock, Plus, FileCode2 } from 'lucide-react';
 
-
-
 interface LessonFormData {
   module_id: string;
   title: string;
@@ -64,20 +62,29 @@ export default function LessonManager() {
         throw new Error('Content is required');
       }
 
+      // Explicitly pick ONLY the fields that exist in your database
       const lessonDataToSave = {
-        ...formData,
+        module_id: formData.module_id,
+        title: formData.title,
+        description: formData.description,
+        content: formData.content,
+        order_index: formData.order_index,
+        duration_minutes: formData.duration_minutes,
+        is_published: formData.is_published,
         type: 'markdown' // Hardcode to markdown
       };
 
       if (editingLesson) {
+        // UPDATE: Removed updated_at completely to prevent the 400 error
         const { error } = await supabase
           .from('lessons')
-          .update({ ...lessonDataToSave, updated_at: new Date().toISOString() })
+          .update(lessonDataToSave)
           .eq('id', editingLesson.id);
 
         if (error) throw error;
         addNotification({ type: 'success', message: 'Lesson updated successfully!' });
       } else {
+        // INSERT: created_at is valid for new records
         const { error } = await supabase
           .from('lessons')
           .insert({ ...lessonDataToSave, created_at: new Date().toISOString() });
@@ -91,6 +98,7 @@ export default function LessonManager() {
       setEditingLesson(null);
       loadLessons();
     } catch (err) {
+      console.error("Save Error:", err);
       addNotification({ type: 'error', message: err instanceof Error ? err.message : 'Failed to save lesson' });
     } finally {
       setLoading(false);
@@ -197,16 +205,16 @@ export default function LessonManager() {
             </div>
 
             <div>
-  <div className="flex items-center justify-between mb-2">
-    <label className="block text-sm font-medium text-[#e8eaf6]">Lesson Content *</label>
-    <span className="text-xs text-[#8890b5]">Hover for block menu (+) or type '/' for commands</span>
-  </div>
-  
-  <NotionEditor 
-    markdown={formData.content} 
-    onChange={(val) => setFormData({ ...formData, content: val || '' })} 
-  />
-</div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-[#e8eaf6]">Lesson Content *</label>
+                <span className="text-xs text-[#8890b5]">Hover for block menu (+) or type '/' for commands</span>
+              </div>
+              
+              <NotionEditor 
+                markdown={formData.content} 
+                onChange={(val) => setFormData({ ...formData, content: val || '' })} 
+              />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
