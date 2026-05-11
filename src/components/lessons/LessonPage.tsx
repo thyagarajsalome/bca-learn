@@ -1,12 +1,10 @@
-import MarkdownViewer from './MarkdownViewer';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLesson } from '../../hooks/useLessons';
 import { useModuleWithLessons } from '../../hooks/useModules';
 import { useProgress } from '../../hooks/useProgress';
 import { useAuth } from '../../hooks/useAuth';
-import PDFViewer from './PDFViewer';
-import NotionEmbed from './NotionEmbed';
+import MarkdownViewer from './MarkdownViewer';
 import { ChevronLeft, ChevronRight, CheckCircle2, ArrowLeft, Clock } from 'lucide-react';
 
 export default function LessonPage() {
@@ -21,7 +19,6 @@ export default function LessonPage() {
 
   useEffect(() => {
     if (lesson && user?.id) {
-      // Mark lesson as in progress when opened
       markInProgress(lesson.id);
       setIsCompleted(progressMap[lesson.id] === 'completed');
     }
@@ -36,10 +33,8 @@ export default function LessonPage() {
 
   const navigateToLesson = (direction: 'prev' | 'next') => {
     if (!moduleData?.lessons) return;
-
     const currentIndex = moduleData.lessons.findIndex(l => l.id === lesson?.id);
     if (currentIndex === -1) return;
-
     const targetIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
 
     if (targetIndex >= 0 && targetIndex < moduleData.lessons.length) {
@@ -58,23 +53,17 @@ export default function LessonPage() {
   if (lessonLoading || moduleLoading) {
     return (
       <div className="min-h-screen bg-[#0c0f1a] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#5b6af0] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#8890b5]">Loading lesson...</p>
-        </div>
+        <div className="w-12 h-12 border-4 border-[#5b6af0] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!lesson) {
     return (
-      <div className="min-h-screen bg-[#0c0f1a] flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-[#0c0f1a] flex items-center justify-center text-center">
+        <div>
           <p className="text-[#8890b5] mb-4">Lesson not found</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="text-[#5b6af0] hover:underline"
-          >
+          <button onClick={() => navigate('/dashboard')} className="text-[#5b6af0] hover:underline">
             Return to Dashboard
           </button>
         </div>
@@ -126,34 +115,9 @@ export default function LessonPage() {
         </div>
       </div>
 
-     // ADD THIS IMPORT AT THE TOP:
-import MarkdownViewer from './MarkdownViewer';
-
-// ... (scroll down to the return statement)
-
       {/* Lesson Content */}
       <div className="flex-1 overflow-hidden">
-        {lesson.type === 'markdown' ? (
-          <MarkdownViewer 
-            content={lesson.content || ''} 
-            title={lesson.title} 
-          />
-        ) : lesson.type === 'pdf' ? (
-          <PDFViewer
-            url={lesson.source_url}
-            title={lesson.title}
-            onComplete={handleMarkComplete}
-          />
-        ) : lesson.type === 'notion' ? (
-          <NotionEmbed
-            url={lesson.source_url}
-            title={lesson.title}
-          />
-        ) : (
-          <div className="h-full flex items-center justify-center">
-            <p className="text-[#8890b5]">Lesson type not supported yet</p>
-          </div>
-        )}
+        <MarkdownViewer content={lesson.content || ''} title={lesson.title} />
       </div>
 
       {/* Bottom Navigation */}
@@ -162,16 +126,15 @@ import MarkdownViewer from './MarkdownViewer';
           <button
             onClick={() => navigateToLesson('prev')}
             disabled={!canNavigatePrev}
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#0c0f1a] hover:bg-[#1e2340] text-[#8890b5] hover:text-[#e8eaf6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#0c0f1a] hover:bg-[#1e2340] text-[#8890b5] transition-colors disabled:opacity-50"
           >
             <ChevronLeft className="w-5 h-5" />
             <span>Previous Lesson</span>
           </button>
-
           <button
             onClick={() => navigateToLesson('next')}
             disabled={!canNavigateNext}
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#0c0f1a] hover:bg-[#1e2340] text-[#8890b5] hover:text-[#e8eaf6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#0c0f1a] hover:bg-[#1e2340] text-[#8890b5] transition-colors disabled:opacity-50"
           >
             <span>Next Lesson</span>
             <ChevronRight className="w-5 h-5" />
