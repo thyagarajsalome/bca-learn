@@ -1,10 +1,11 @@
+import NotionEditor from './NotionEditor';
 import { useState, useEffect } from 'react';
 import { useModules } from '../../hooks/useModules';
 import { supabase } from '../../lib/supabase';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { Save, X, BookOpen, Clock, Plus, FileCode2 } from 'lucide-react';
-import MDEditor from '@uiw/react-md-editor';
-import rehypeSanitize from "rehype-sanitize";
+
+
 
 interface LessonFormData {
   module_id: string;
@@ -195,18 +196,17 @@ export default function LessonManager() {
               />
             </div>
 
-            <div data-color-mode="dark">
-              <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Lesson Content (Markdown) *</label>
-              <div className="border border-[#1e2340] rounded-lg overflow-hidden">
-                <MDEditor
-                  value={formData.content}
-                  onChange={(val) => setFormData({ ...formData, content: val || '' })}
-                  height={400}
-                  previewOptions={{ rehypePlugins: [[rehypeSanitize]] }}
-                  style={{ backgroundColor: '#0c0f1a' }}
-                />
-              </div>
-            </div>
+            <div>
+  <div className="flex items-center justify-between mb-2">
+    <label className="block text-sm font-medium text-[#e8eaf6]">Lesson Content *</label>
+    <span className="text-xs text-[#8890b5]">Hover for block menu (+) or type '/' for commands</span>
+  </div>
+  
+  <NotionEditor 
+    markdown={formData.content} 
+    onChange={(val) => setFormData({ ...formData, content: val || '' })} 
+  />
+</div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
