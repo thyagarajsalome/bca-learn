@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLesson } from '../../hooks/useLessons';
 import { useModuleWithLessons } from '../../hooks/useModules';
@@ -11,23 +11,25 @@ export default function LessonPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  
   const { data: lesson, isLoading: lessonLoading } = useLesson(lessonId || '');
   const { data: moduleData, isLoading: moduleLoading } = useModuleWithLessons(lesson?.module_id || '');
   const { progressMap, markInProgress, markComplete } = useProgress(user?.id || '');
 
-  const [isCompleted, setIsCompleted] = useState(false);
+  // Determine completion dynamically instead of using React state
+  const isCompleted = lesson ? progressMap[lesson.id] === 'completed' : false;
+  const currentStatus = lesson ? progressMap[lesson.id] : undefined;
 
+  // FIX: Break the infinite loop by only running when there is no status
   useEffect(() => {
-    if (lesson && user?.id) {
-      markInProgress(lesson.id);
-      setIsCompleted(progressMap[lesson.id] === 'completed');
+    if (lesson?.id && user?.id && !currentStatus) {
+      markInProgress(lesson.id).catch(console.error);
     }
-  }, [lesson, user, progressMap, markInProgress]);
+  }, [lesson?.id, user?.id, currentStatus, markInProgress]);
 
   const handleMarkComplete = async () => {
     if (lesson && user?.id) {
       await markComplete(lesson.id);
-      setIsCompleted(true);
     }
   };
 
@@ -73,15 +75,13 @@ export default function LessonPage() {
 
   return (
     <div className="h-screen bg-[#0c0f1a] flex flex-col overflow-hidden">
-      {/* Top Header - Stays fixed at the top */}
+      {/* Top Header */}
       <div className="bg-[#13172a] border-b border-[#1e2340] px-4 py-3 md:px-6 md:py-4 flex-shrink-0 z-10 shadow-sm">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          
           <div className="flex items-start sm:items-center space-x-3 md:space-x-4 min-w-0">
             <button
               onClick={() => navigate(`/module/${lesson.module_id}`)}
               className="p-2 -ml-2 rounded-lg bg-transparent hover:bg-[#1e2340] text-[#8890b5] hover:text-[#e8eaf6] transition-colors flex-shrink-0"
-              aria-label="Back to module"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -119,12 +119,12 @@ export default function LessonPage() {
         </div>
       </div>
 
-      {/* Main Content Area - Scrolls independently */}
-      <div className="flex-1 overflow-hidden relative">
+      {/* Main Content Area - FIX: Explicit overflow-y-auto ensures long content scrolls perfectly */}
+      <div className="flex-1 overflow-y-auto relative scroll-smooth">
         <MarkdownViewer content={lesson.content || ''} title={lesson.title} />
       </div>
 
-      {/* Bottom Navigation - Fixed at the bottom */}
+      {/* Bottom Navigation */}
       <div className="bg-[#13172a] border-t border-[#1e2340] px-4 py-3 md:px-6 md:py-4 flex-shrink-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <button

@@ -70,7 +70,7 @@ export function useProgress(userId: string) {
           status: 'completed',
           completed_at: new Date().toISOString(),
           last_accessed: new Date().toISOString(),
-        })
+        }, { onConflict: 'user_id,lesson_id' }) // <-- FIX APPLIED HERE
         .select()
         .single();
 
@@ -92,7 +92,7 @@ export function useProgress(userId: string) {
           lesson_id: lessonId,
           status: 'in_progress',
           last_accessed: new Date().toISOString(),
-        })
+        }, { onConflict: 'user_id,lesson_id' }) // <-- FIX APPLIED HERE
         .select()
         .single();
 
