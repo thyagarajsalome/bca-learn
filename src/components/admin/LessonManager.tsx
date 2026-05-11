@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useModules } from '../../hooks/useModules';
 import { supabase } from '../../lib/supabase';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { Save, X, BookOpen, FileText, Video, ExternalLink, Clock, Plus, FileCode2 } from 'lucide-react';
+import { Save, X, BookOpen, Clock, Plus, FileCode2 } from 'lucide-react';
 import MDEditor from '@uiw/react-md-editor';
 import rehypeSanitize from "rehype-sanitize";
 
@@ -11,38 +10,31 @@ interface LessonFormData {
   module_id: string;
   title: string;
   description: string;
-  type: 'pdf' | 'notion' | 'video' | 'external' | 'markdown';
-  source_url: string;
   content: string;
   order_index: number;
   duration_minutes: number;
-  page_count: number;
   is_published: boolean;
 }
 
 export default function LessonManager() {
-  const navigate = useNavigate();
   const { data: modules } = useModules();
   const { addNotification } = useNotifications();
   const [showForm, setShowForm] = useState(false);
   const [editingLesson, setEditingLesson] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lessons, setLessons] = useState<any[]>([]);
 
   const initialFormState: LessonFormData = {
     module_id: '',
     title: '',
     description: '',
-    type: 'markdown', // Set markdown as the new default
-    source_url: '',
     content: '',
     order_index: 1,
     duration_minutes: 45,
-    page_count: 0,
     is_published: true,
   };
 
   const [formData, setFormData] = useState<LessonFormData>(initialFormState);
-  const [lessons, setLessons] = useState<any[]>([]);
 
   const loadLessons = async () => {
     try {
@@ -54,10 +46,7 @@ export default function LessonManager() {
       if (error) throw error;
       setLessons(data || []);
     } catch (err) {
-      addNotification({
-        type: 'error',
-        message: 'Failed to load lessons'
-      });
+      addNotification({ type: 'error', message: 'Failed to load lessons' });
     }
   };
 
@@ -70,28 +59,19 @@ export default function LessonManager() {
     setLoading(true);
 
     try {
-      // Basic validation based on type
-      if (formData.type === 'markdown' && !formData.content) {
-        throw new Error('Content is required for Markdown lessons');
-      } else if (formData.type !== 'markdown' && !formData.source_url) {
-        throw new Error('Source URL is required for this lesson type');
+      if (!formData.content) {
+        throw new Error('Content is required');
       }
 
       const lessonDataToSave = {
         ...formData,
-        // Ensure we don't save empty strings as URLs if it's markdown
-        source_url: formData.type === 'markdown' ? null : formData.source_url,
-        // Ensure we don't save content if it's not markdown
-        content: formData.type === 'markdown' ? formData.content : null,
+        type: 'markdown' // Hardcode to markdown
       };
 
       if (editingLesson) {
         const { error } = await supabase
           .from('lessons')
-          .update({
-            ...lessonDataToSave,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ ...lessonDataToSave, updated_at: new Date().toISOString() })
           .eq('id', editingLesson.id);
 
         if (error) throw error;
@@ -99,12 +79,7 @@ export default function LessonManager() {
       } else {
         const { error } = await supabase
           .from('lessons')
-          .insert({
-            ...lessonDataToSave,
-            created_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
+          .insert({ ...lessonDataToSave, created_at: new Date().toISOString() });
 
         if (error) throw error;
         addNotification({ type: 'success', message: 'Lesson created successfully!' });
@@ -114,12 +89,8 @@ export default function LessonManager() {
       setShowForm(false);
       setEditingLesson(null);
       loadLessons();
-
     } catch (err) {
-      addNotification({
-        type: 'error',
-        message: err instanceof Error ? err.message : 'Failed to save lesson'
-      });
+      addNotification({ type: 'error', message: err instanceof Error ? err.message : 'Failed to save lesson' });
     } finally {
       setLoading(false);
     }
@@ -131,12 +102,9 @@ export default function LessonManager() {
       module_id: lesson.module_id,
       title: lesson.title,
       description: lesson.description || '',
-      type: lesson.type,
-      source_url: lesson.source_url || '',
       content: lesson.content || '',
       order_index: lesson.order_index,
       duration_minutes: lesson.duration_minutes || 45,
-      page_count: lesson.page_count || 0,
       is_published: lesson.is_published,
     });
     setShowForm(true);
@@ -144,7 +112,6 @@ export default function LessonManager() {
 
   const handleDelete = async (lessonId: string) => {
     if (!confirm('Are you sure you want to delete this lesson?')) return;
-
     try {
       const { error } = await supabase.from('lessons').delete().eq('id', lessonId);
       if (error) throw error;
@@ -152,22 +119,6 @@ export default function LessonManager() {
       loadLessons();
     } catch (err) {
       addNotification({ type: 'error', message: 'Failed to delete lesson' });
-    }
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'markdown':
-        return <FileCode2 className="w-4 h-4" />;
-      case 'pdf':
-      case 'notion':
-        return <FileText className="w-4 h-4" />;
-      case 'video':
-        return <Video className="w-4 h-4" />;
-      case 'external':
-        return <ExternalLink className="w-4 h-4" />;
-      default:
-        return <FileText className="w-4 h-4" />;
     }
   };
 
@@ -199,33 +150,29 @@ export default function LessonManager() {
               {editingLesson ? 'Edit Lesson' : 'Create New Lesson'}
             </h3>
             <button
-              onClick={() => {
-                setShowForm(false);
-                setEditingLesson(null);
-              }}
-              className="p-2 rounded-lg hover:bg-[#1e2340] text-[#8890b5] hover:text-[#e8eaf6] transition-colors"
+              onClick={() => { setShowForm(false); setEditingLesson(null); }}
+              className="p-2 rounded-lg hover:bg-[#1e2340] text-[#8890b5] hover:text-[#e8eaf6]"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Module *</label>
-              <select
-                value={formData.module_id}
-                onChange={(e) => setFormData({ ...formData, module_id: e.target.value })}
-                className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                required
-              >
-                <option value="">Select a module</option>
-                {modules?.map((module) => (
-                  <option key={module.id} value={module.id}>{module.title}</option>
-                ))}
-              </select>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Module *</label>
+                <select
+                  value={formData.module_id}
+                  onChange={(e) => setFormData({ ...formData, module_id: e.target.value })}
+                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
+                  required
+                >
+                  <option value="">Select a module</option>
+                  {modules?.map((module) => (
+                    <option key={module.id} value={module.id}>{module.title}</option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Lesson Title *</label>
                 <input
@@ -233,25 +180,8 @@ export default function LessonManager() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                  placeholder="Enter lesson title"
                   required
                 />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Content Type *</label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                  required
-                >
-                  <option value="markdown">Markdown Document (Recommended)</option>
-                  <option value="pdf">PDF File</option>
-                  <option value="notion">Notion Page</option>
-                  <option value="video">Video</option>
-                  <option value="external">External Link</option>
-                </select>
               </div>
             </div>
 
@@ -261,42 +191,24 @@ export default function LessonManager() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                placeholder="Brief summary for the lesson card..."
                 rows={2}
               />
             </div>
 
-            {/* CONDITIONAL RENDER BASED ON TYPE */}
-            {formData.type === 'markdown' ? (
-              <div data-color-mode="dark">
-                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Lesson Content (Markdown) *</label>
-                <div className="border border-[#1e2340] rounded-lg overflow-hidden">
-                  <MDEditor
-                    value={formData.content}
-                    onChange={(val) => setFormData({ ...formData, content: val || '' })}
-                    height={400}
-                    previewOptions={{
-                      rehypePlugins: [[rehypeSanitize]],
-                    }}
-                    style={{ backgroundColor: '#0c0f1a' }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Source URL *</label>
-                <input
-                  type="url"
-                  value={formData.source_url}
-                  onChange={(e) => setFormData({ ...formData, source_url: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                  placeholder="https://..."
-                  required={formData.type !== 'markdown'}
+            <div data-color-mode="dark">
+              <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Lesson Content (Markdown) *</label>
+              <div className="border border-[#1e2340] rounded-lg overflow-hidden">
+                <MDEditor
+                  value={formData.content}
+                  onChange={(val) => setFormData({ ...formData, content: val || '' })}
+                  height={400}
+                  previewOptions={{ rehypePlugins: [[rehypeSanitize]] }}
+                  style={{ backgroundColor: '#0c0f1a' }}
                 />
               </div>
-            )}
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Duration (minutes)</label>
                 <input
@@ -306,19 +218,6 @@ export default function LessonManager() {
                   className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
                 />
               </div>
-              
-              {formData.type === 'pdf' && (
-                <div>
-                  <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Page Count</label>
-                  <input
-                    type="number"
-                    value={formData.page_count}
-                    onChange={(e) => setFormData({ ...formData, page_count: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                  />
-                </div>
-              )}
-
               <div>
                 <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Order</label>
                 <input
@@ -344,10 +243,7 @@ export default function LessonManager() {
             <div className="flex justify-end space-x-3 pt-4 border-t border-[#1e2340]">
               <button
                 type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  setEditingLesson(null);
-                }}
+                onClick={() => { setShowForm(false); setEditingLesson(null); }}
                 className="px-6 py-2 rounded-lg border border-[#1e2340] text-[#8890b5] hover:text-[#e8eaf6]"
               >
                 Cancel
@@ -357,9 +253,7 @@ export default function LessonManager() {
                 disabled={loading}
                 className="bg-[#5b6af0] hover:bg-[#4a5ae0] text-white px-6 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50"
               >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : <Save className="w-4 h-4" />}
+                {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
                 <span>{editingLesson ? 'Update' : 'Save'} Lesson</span>
               </button>
             </div>
@@ -376,14 +270,11 @@ export default function LessonManager() {
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
                     <div className="p-2 rounded bg-[#1e2340] text-[#8890b5]">
-                      {getTypeIcon(lesson.type)}
+                      <FileCode2 className="w-4 h-4" />
                     </div>
                     <h4 className="text-lg font-semibold text-[#e8eaf6]">{lesson.title}</h4>
                     <span className={`px-2 py-1 rounded text-xs font-medium ${lesson.is_published ? 'bg-[#4ecca3]/20 text-[#4ecca3]' : 'bg-[#f0b15b]/20 text-[#f0b15b]'}`}>
                       {lesson.is_published ? 'Published' : 'Draft'}
-                    </span>
-                    <span className="px-2 py-1 rounded text-xs font-medium bg-[#5b6af0]/20 text-[#5b6af0] uppercase">
-                      {lesson.type}
                     </span>
                   </div>
                   <p className="text-sm text-[#8890b5] mb-2">{lesson.description || 'No description'}</p>

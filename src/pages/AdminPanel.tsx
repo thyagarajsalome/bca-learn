@@ -1,25 +1,16 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { BookOpen, Upload, Users, LogOut, Plus, X } from 'lucide-react';
-import FileUpload from '../components/admin/FileUpload';
+import { BookOpen, Users, LogOut, Plus, X, RefreshCw, Layers } from 'lucide-react';
 import LessonManager from '../components/admin/LessonManager';
 import { useNotifications } from '../contexts/NotificationContext';
 import { supabase } from '../lib/supabase';
-
-interface UploadedFile {
-  name: string;
-  url: string;
-  size: number;
-  path: string;
-}
 
 export default function AdminPanel() {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
   const { addNotification } = useNotifications();
-  const [activeTab, setActiveTab] = useState<'modules' | 'lessons' | 'upload' | 'users'>('modules');
+  const [activeTab, setActiveTab] = useState<'modules' | 'lessons' | 'users'>('modules');
 
   // Check if user is admin
   const isAdmin = profile?.role === 'admin';
@@ -97,19 +88,8 @@ export default function AdminPanel() {
                     : 'bg-[#13172a] text-[#8890b5] hover:text-[#e8eaf6]'
                 }`}
               >
-                <Upload className="w-5 h-5" />
+                <Layers className="w-5 h-5" />
                 <span>Lessons</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('upload')}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                  activeTab === 'upload'
-                    ? 'bg-[#5b6af0] text-white'
-                    : 'bg-[#13172a] text-[#8890b5] hover:text-[#e8eaf6]'
-                }`}
-              >
-                <Upload className="w-5 h-5" />
-                <span>Upload Content</span>
               </button>
               <button
                 onClick={() => setActiveTab('users')}
@@ -129,7 +109,6 @@ export default function AdminPanel() {
           <div className="flex-1">
             {activeTab === 'modules' && <ModulesManagement />}
             {activeTab === 'lessons' && <LessonsManagement />}
-            {activeTab === 'upload' && <ContentUpload />}
             {activeTab === 'users' && <UsersManagement />}
           </div>
         </div>
@@ -174,7 +153,7 @@ function ModulesManagement() {
 
   useEffect(() => {
     loadModules();
-  }, [] );
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -453,11 +432,6 @@ function LessonsManagement() {
   return <LessonManager />;
 }
 
-// Content Upload Component
-function ContentUpload() {
-  return <FileUpload />;
-}
-
 // Users Management Component
 function UsersManagement() {
   const { addNotification } = useNotifications();
@@ -475,7 +449,6 @@ function UsersManagement() {
 
       if (profilesError) throw profilesError;
 
-      // Map profiles directly (Emails are securely hidden from client access by default)
       const combinedUsers = profiles.map(profile => ({
         ...profile,
         email: 'Protected by Supabase', 
@@ -529,7 +502,7 @@ function UsersManagement() {
           disabled={loading}
           className="text-sm text-[#5b6af0] hover:text-[#4a5ae0] transition-colors disabled:opacity-50 flex items-center space-x-1"
         >
-          <Upload className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           <span>{loading ? 'Loading...' : 'Refresh'}</span>
         </button>
       </div>

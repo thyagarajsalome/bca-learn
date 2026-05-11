@@ -48,50 +48,51 @@ export type Database = {
           created_at?: string;
         };
       };
-      lessons: {
+
+
+   lessons: {
         Row: {
           id: string;
           module_id: string;
           title: string;
           description: string | null;
-          type: 'pdf' | 'notion' | 'video' | 'external' | 'markdown';
-          source_url: string | null;
-          content: string | null;
+          type: 'markdown';
+          content: string;
           order_index: number;
           duration_minutes: number | null;
-          page_count: number | null;
           is_published: boolean;
           created_at: string;
         };
-        Insert: {
+
+
+      Insert: {
           id?: string;
           module_id: string;
           title: string;
           description?: string | null;
-          type: 'pdf' | 'notion' | 'video' | 'external' | 'markdown';
-          source_url?: string | null;
-          content?: string | null;
+          type?: 'markdown';
+          content: string;
           order_index?: number;
           duration_minutes?: number | null;
-          page_count?: number | null;
           is_published?: boolean;
           created_at?: string;
         };
-        Update: {
+
+       Update: {
           id?: string;
           module_id?: string;
           title?: string;
           description?: string | null;
-          type?: 'pdf' | 'notion' | 'video' | 'external' | 'markdown';
-          source_url?: string | null;
-          content?: string | null;
+          type?: 'markdown';
+          content?: string;
           order_index?: number;
           duration_minutes?: number | null;
-          page_count?: number | null;
           is_published?: boolean;
           created_at?: string;
         };
       };
+
+
       user_progress: {
         Row: {
           id: string;
@@ -109,6 +110,8 @@ export type Database = {
           last_accessed?: string;
           completed_at?: string | null;
         };
+
+
         Update: {
           id?: string;
           user_id?: string;
@@ -118,6 +121,10 @@ export type Database = {
           completed_at?: string | null;
         };
       };
+
+
+
+
       profiles: {
         Row: {
           id: string;

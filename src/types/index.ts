@@ -15,12 +15,10 @@ export interface Lesson {
   module_id: string;
   title: string;
   description: string;
-  type: 'pdf' | 'notion' | 'video' | 'external' | 'markdown';
-  source_url: string;
-  content?: string;
+  type: 'markdown';
+  content: string;
   order_index: number;
   duration_minutes: number;
-  page_count?: number;
   is_published: boolean;
 }
 
