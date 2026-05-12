@@ -2,10 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import type { Module, Lesson } from '../types';
 
-// 1. Add searchQuery to your options interface
 export function useModules(options: { includeUnpublished?: boolean; searchQuery?: string } = {}) {
   return useQuery({
-    // 2. Add searchQuery to the queryKey so React Query knows to refetch when the search changes
     queryKey: ['modules', options.includeUnpublished, options.searchQuery],
     queryFn: async () => {
       let query = supabase
@@ -17,7 +15,6 @@ export function useModules(options: { includeUnpublished?: boolean; searchQuery?
         query = query.eq('is_published', true);
       }
 
-      // 3. Add the Supabase search filter (ilike is case-insensitive)
       if (options.searchQuery) {
         query = query.ilike('title', `%${options.searchQuery}%`);
       }
@@ -26,10 +23,10 @@ export function useModules(options: { includeUnpublished?: boolean; searchQuery?
       if (error) throw error;
       return data as Module[];
     },
+    // Keep data fresh in cache for 5 minutes (300,000 ms)
+    staleTime: 1000 * 60 * 5,
   });
 }
-
-// ... keep useModuleWithLessons exactly as it is
 
 export function useModuleWithLessons(moduleId: string) {
   return useQuery({
@@ -58,5 +55,7 @@ export function useModuleWithLessons(moduleId: string) {
       };
     },
     enabled: !!moduleId,
+    // Keep data fresh in cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 }

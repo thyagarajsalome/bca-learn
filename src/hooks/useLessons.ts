@@ -22,6 +22,8 @@ export function useLessons(moduleId?: string) {
       return data as Lesson[];
     },
     enabled: !moduleId || !!moduleId, // Always enabled, but can filter by moduleId
+    // ADDED: Keep data fresh in cache for 5 minutes (300,000 ms)
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -39,5 +41,7 @@ export function useLesson(lessonId: string) {
       return data as Lesson;
     },
     enabled: !!lessonId,
+    // ADDED: Keep data fresh in cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 }
