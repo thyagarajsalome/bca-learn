@@ -6,7 +6,7 @@ import ModuleDetail from './pages/ModuleDetail';
 import LessonViewer from './pages/LessonViewer';
 import Auth from './pages/Auth';
 import AdminPanel from './pages/AdminPanel';
-import AdminTest from './pages/AdminTest';
+// Removed AdminTest import
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { NotificationProvider } from './contexts/NotificationContext';
 import NotificationContainer from './components/ui/NotificationContainer';
@@ -61,14 +61,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/admin-test"
-            element={
-              <ProtectedRoute>
-                <AdminTest />
-              </ProtectedRoute>
-            }
-          />
+          {/* Removed /admin-test route */}
         </Routes>
       </Router>
       </NotificationProvider>
