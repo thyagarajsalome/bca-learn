@@ -125,15 +125,16 @@ export default function Auth() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#8890b5]" />
                 <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] placeholder-[##8890b5] focus:outline-none focus:ring-2 focus:ring-[#5b6af0] focus:border-transparent transition-all"
-                  placeholder="Enter your password"
-                  required
-                  minLength={6}
-                />
+  id="password"
+  type="password"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  // FIX: Removed double ## from placeholder class
+  className="w-full pl-10 pr-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] placeholder-[#8890b5] focus:outline-none focus:ring-2 focus:ring-[#5b6af0] focus:border-transparent transition-all"
+  placeholder="Enter your password"
+  required
+  minLength={6}
+/>
               </div>
             </div>
 

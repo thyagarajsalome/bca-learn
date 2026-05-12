@@ -15,8 +15,15 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { data: modules, isLoading: modulesLoading } = useModules();
-  const { data: allLessons } = useLessons();
-  const { progressMap, overallPercent, calculateModuleProgress } = useProgress(user?.id || '');
+  
+  // FIX: Track loading state for lessons to ensure progress calculations are accurate
+  const { data: allLessons, isLoading: lessonsLoading } = useLessons();
+  
+  // FIX: Pass the total lesson count to the progress hook for accurate percentage calculation
+  const { progressMap, overallPercent, calculateModuleProgress } = useProgress(
+    user?.id || '', 
+    allLessons?.length || 0
+  );
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -62,10 +69,16 @@ export default function Dashboard() {
     navigate('/auth');
   };
 
-  if (modulesLoading) {
+  // FIX: Added lessonsLoading to the guard to prevent UI flicker/incorrect progress on load
+  if (modulesLoading || lessonsLoading) {
     return (
       <div className="min-h-screen bg-[#0c0f1a]">
-        <Navbar user={profile ? { ...profile, role: profile.role } : undefined} onNavigate={handleNavigate} onLogout={handleLogout} />
+        {/* FIX: Removed invalid .role access to match current Supabase schema */}
+        <Navbar 
+          user={profile || undefined} 
+          onNavigate={handleNavigate} 
+          onLogout={handleLogout} 
+        />
         <div className="pt-20 px-6">
           <div className="max-w-7xl mx-auto">
             <Skeleton className="h-8 w-64 mb-6" />
