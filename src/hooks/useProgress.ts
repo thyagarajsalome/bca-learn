@@ -1,3 +1,4 @@
+import { useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import type { LessonStatus, UserProgress } from '../types';
@@ -11,7 +12,7 @@ interface ModuleProgress {
   total: number;
 }
 
-export function useProgress(userId: string) {
+export function useProgress(userId: string, totalLessonsCount: number = 0) {
   const queryClient = useQueryClient();
 
   const { data: progressList = [], isLoading, error } = useQuery({
@@ -28,16 +29,15 @@ export function useProgress(userId: string) {
     enabled: !!userId,
   });
 
-  // Create progress map
-  const progressMap: ProgressMap = progressList.reduce((acc, progress) => {
-    acc[progress.lesson_id] = progress.status;
-    return acc;
-  }, {} as ProgressMap);
+  const progressMap: ProgressMap = useMemo(() => {
+    return progressList.reduce((acc, progress) => {
+      acc[progress.lesson_id] = progress.status;
+      return acc;
+    }, {} as ProgressMap);
+  }, [progressList]);
 
-  // Calculate module progress (requires lesson data)
-  const calculateModuleProgress = (lessons: any[]): Record<string, ModuleProgress> => {
+  const calculateModuleProgress = useCallback((lessons: any[]): Record<string, ModuleProgress> => {
     const moduleProgress: Record<string, ModuleProgress> = {};
-
     lessons.forEach((lesson) => {
       const moduleId = lesson.module_id;
       if (!moduleProgress[moduleId]) {
@@ -48,18 +48,15 @@ export function useProgress(userId: string) {
         moduleProgress[moduleId].completed++;
       }
     });
-
     return moduleProgress;
-  };
+  }, [progressMap]);
 
-  // Calculate overall progress
-  const overallPercent = progressList.length > 0
-    ? Math.round(
-        (progressList.filter(p => p.status === 'completed').length / progressList.length) * 100
-      )
-    : 0;
+  const overallPercent = useMemo(() => {
+    if (totalLessonsCount === 0) return 0;
+    const completedCount = progressList.filter(p => p.status === 'completed').length;
+    return Math.round((completedCount / totalLessonsCount) * 100);
+  }, [progressList, totalLessonsCount]);
 
-  // Mark lesson as complete
   const markComplete = useMutation({
     mutationFn: async (lessonId: string) => {
       const { data, error } = await supabase
@@ -70,10 +67,9 @@ export function useProgress(userId: string) {
           status: 'completed',
           completed_at: new Date().toISOString(),
           last_accessed: new Date().toISOString(),
-        }, { onConflict: 'user_id,lesson_id' }) // <-- FIX APPLIED HERE
+        }, { onConflict: 'user_id,lesson_id' })
         .select()
         .single();
-
       if (error) throw error;
       return data;
     },
@@ -82,7 +78,6 @@ export function useProgress(userId: string) {
     },
   });
 
-  // Mark lesson as in progress
   const markInProgress = useMutation({
     mutationFn: async (lessonId: string) => {
       const { data, error } = await supabase
@@ -92,10 +87,9 @@ export function useProgress(userId: string) {
           lesson_id: lessonId,
           status: 'in_progress',
           last_accessed: new Date().toISOString(),
-        }, { onConflict: 'user_id,lesson_id' }) // <-- FIX APPLIED HERE
+        }, { onConflict: 'user_id,lesson_id' })
         .select()
         .single();
-
       if (error) throw error;
       return data;
     },

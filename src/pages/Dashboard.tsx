@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useModules } from '../hooks/useModules';
@@ -10,22 +10,26 @@ import SearchBar from '../components/ui/SearchBar';
 import OverallProgress from '../components/progress/OverallProgress';
 import Skeleton from '../components/ui/Skeleton';
 import { BookOpen, TrendingUp } from 'lucide-react';
+import type { Lesson, Module } from '../types';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { data: modules, isLoading: modulesLoading } = useModules();
-  
-  // FIX: Track loading state for lessons to ensure progress calculations are accurate
   const { data: allLessons, isLoading: lessonsLoading } = useLessons();
   
-  // FIX: Pass the total lesson count to the progress hook for accurate percentage calculation
+  // FIX: Passed total count to hook for accurate calculation
   const { progressMap, overallPercent, calculateModuleProgress } = useProgress(
-    user?.id || '', 
+    user?.id || '',
     allLessons?.length || 0
   );
 
   const [searchQuery, setSearchQuery] = useState('');
+
+  // FIX: Explicitly type moduleProgressData to avoid redline indexing errors
+  const moduleProgressData: Record<string, { completed: number; total: number }> = useMemo(() => {
+    return allLessons ? calculateModuleProgress(allLessons) : {};
+  }, [allLessons, calculateModuleProgress]);
 
   // Filter modules based on search query
   const filteredModules = modules?.filter(module =>
@@ -33,14 +37,13 @@ export default function Dashboard() {
     module.description?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  // Calculate module progress
-  const moduleProgressData = allLessons ? calculateModuleProgress(allLessons) : {};
-
-  // Get module progress with additional info
-  const modulesWithProgress = filteredModules.map(module => ({
-    ...module,
-    progress: moduleProgressData[module.id] || { completed: 0, total: 0 },
-  }));
+  // FIX: Created a helper to keep progress data alongside modules without breaking types
+  const modulesWithProgress = useMemo(() => {
+    return filteredModules.map(module => ({
+      ...module,
+      progress: moduleProgressData[module.id] || { completed: 0, total: 0 },
+    }));
+  }, [filteredModules, moduleProgressData]);
 
   // Get continue learning items
   const continueLearning = allLessons
@@ -52,11 +55,10 @@ export default function Dashboard() {
         id: lesson.id,
         title: lesson.title,
         module: module?.title || 'Unknown Module',
-        progress: progressMap[lesson.id] === 'completed' ? 100 : 50,
       };
     }) || [];
 
-  const handleLessonClick = (lesson: any) => {
+  const handleLessonClick = (lesson: { id: string }) => {
     navigate(`/lesson/${lesson.id}`);
   };
 
@@ -69,22 +71,16 @@ export default function Dashboard() {
     navigate('/auth');
   };
 
-  // FIX: Added lessonsLoading to the guard to prevent UI flicker/incorrect progress on load
   if (modulesLoading || lessonsLoading) {
     return (
       <div className="min-h-screen bg-[#0c0f1a]">
-        {/* FIX: Removed invalid .role access to match current Supabase schema */}
-        <Navbar 
-          user={profile || undefined} 
-          onNavigate={handleNavigate} 
-          onLogout={handleLogout} 
-        />
+        <Navbar user={profile || undefined} onNavigate={handleNavigate} onLogout={handleLogout} />
         <div className="pt-20 px-6">
           <div className="max-w-7xl mx-auto">
             <Skeleton className="h-8 w-64 mb-6" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="h-64" />
+                <Skeleton key={i} className="h-64 rounded-xl" />
               ))}
             </div>
           </div>
@@ -99,7 +95,6 @@ export default function Dashboard() {
 
       <div className="pt-20">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-[#e8eaf6] mb-2">
               Welcome back, {profile?.name || 'Learner'}!
@@ -107,7 +102,6 @@ export default function Dashboard() {
             <p className="text-[#8890b5]">Continue your learning journey</p>
           </div>
 
-          {/* Search */}
           <div className="mb-8">
             <SearchBar
               placeholder="Search modules or lessons..."
@@ -116,11 +110,8 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-[#13172a] rounded-xl p-6 border border-[#1e2340]">
                   <div className="flex items-center justify-between mb-2">
@@ -145,56 +136,41 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Modules Section */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-[#e8eaf6]">
-                    All Modules ({filteredModules.length})
-                  </h2>
-                </div>
+                <h2 className="text-xl font-semibold text-[#e8eaf6] mb-4">
+                  All Modules ({filteredModules.length})
+                </h2>
 
-                {modulesWithProgress.length > 0 ? (
-                  <div className="space-y-4">
-                    {modulesWithProgress.map((module) => {
-                      const moduleLessons = allLessons?.filter(l => l.module_id === module.id) || [];
-                      return (
-                        <ModuleAccordion
-                          key={module.id}
-                          module={module}
-                          lessons={moduleLessons}
-                          progressMap={progressMap}
-                          onLessonClick={handleLessonClick}
-                          isDefaultOpen={module.progress.completed > 0}
-                        />
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 bg-[#13172a] rounded-xl border border-[#1e2340]">
-                    <BookOpen className="w-12 h-12 text-[#8890b5] mx-auto mb-4" />
-                    <p className="text-[#8890b5]">
-                      {searchQuery ? 'No modules found matching your search' : 'No modules available yet'}
-                    </p>
-                  </div>
-                )}
+                <div className="space-y-4">
+                  {modulesWithProgress.map((module) => (
+                    <ModuleAccordion
+                      key={module.id}
+                      module={module as Module}
+                      lessons={allLessons?.filter(l => l.module_id === module.id) || []}
+                      progressMap={progressMap}
+                      onLessonClick={handleLessonClick}
+                      isDefaultOpen={module.progress.completed > 0}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Sidebar */}
             <div className="space-y-6">
               <OverallProgress
                 overallPercent={overallPercent}
+                // FIX: Added safe fallback for colors and typed the accumulator
                 moduleProgress={Object.entries(moduleProgressData).reduce((acc, [moduleId, data]) => {
                   const module = modules?.find(m => m.id === moduleId);
                   if (module) {
                     acc[moduleId] = {
                       ...data,
                       title: module.title,
-                      color: module.color,
+                      color: module.color || '#5b6af0',
                     };
                   }
                   return acc;
-                }, {} as any)}
+                }, {} as Record<string, { completed: number; total: number; title: string; color: string }>)}
               />
 
               {continueLearning.length > 0 && (
@@ -210,14 +186,8 @@ export default function Dashboard() {
                         onClick={() => handleLessonClick({ id: item.id })}
                         className="w-full bg-[#0c0f1a] hover:bg-[#1e2340] rounded-lg p-4 text-left transition-colors group"
                       >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-[#e8eaf6] group-hover:text-[#5b6af0] transition-colors">
-                              {item.title}
-                            </div>
-                            <div className="text-xs text-[#8890b5] mt-1">{item.module}</div>
-                          </div>
-                        </div>
+                        <div className="text-sm font-medium text-[#e8eaf6] group-hover:text-[#5b6af0]">{item.title}</div>
+                        <div className="text-xs text-[#8890b5] mt-1">{item.module}</div>
                       </button>
                     ))}
                   </div>
