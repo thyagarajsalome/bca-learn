@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { BookOpen, Users, LogOut, Plus, X, RefreshCw, Layers, Edit2 } from 'lucide-react';
+import { BookOpen, Users, LogOut, Plus, X, RefreshCw, Layers, Edit2, Database } from 'lucide-react';
 import LessonManager from '../components/admin/LessonManager';
 import { useNotifications } from '../contexts/NotificationContext';
 import { supabase } from '../lib/supabase';
@@ -117,7 +117,9 @@ export default function AdminPanel() {
   );
 }
 
-// Modules Management Component
+// ==========================================
+// MODULES MANAGEMENT COMPONENT
+// ==========================================
 function ModulesManagement() {
   const { addNotification } = useNotifications();
   const [showForm, setShowForm] = useState(false);
@@ -134,6 +136,7 @@ function ModulesManagement() {
     semester: 1,
     order_index: 1,
     is_published: true,
+    size_mb: 0 // New field for UI (Megabytes)
   });
 
   const [formData, setFormData] = useState({
@@ -144,6 +147,7 @@ function ModulesManagement() {
     semester: 1,
     order_index: 1,
     is_published: true,
+    size_mb: 0 // New field for UI (Megabytes)
   });
 
   const loadModules = async () => {
@@ -156,10 +160,7 @@ function ModulesManagement() {
       if (error) throw error;
       setModules(data || []);
     } catch (err) {
-      addNotification({
-        type: 'error',
-        message: 'Failed to load modules'
-      });
+      addNotification({ type: 'error', message: 'Failed to load modules' });
     }
   };
 
@@ -182,35 +183,26 @@ function ModulesManagement() {
           semester: formData.semester,
           order_index: formData.order_index,
           is_published: formData.is_published,
+          // Convert Megabytes (UI) to Bytes (Database)
+          size_bytes: Math.round(formData.size_mb * 1024 * 1024) 
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      addNotification({
-        type: 'success',
-        message: 'Module created successfully!'
-      });
+      addNotification({ type: 'success', message: 'Module created successfully!' });
 
       setFormData({
-        title: '',
-        description: '',
-        icon: '📚',
-        color: '#5b6af0',
-        semester: 1,
-        order_index: 1,
-        is_published: true,
+        title: '', description: '', icon: '📚', color: '#5b6af0',
+        semester: 1, order_index: 1, is_published: true, size_mb: 0
       });
       setShowForm(false);
       loadModules();
 
     } catch (err) {
       console.error("Create Module Error:", err);
-      addNotification({
-        type: 'error',
-        message: err instanceof Error ? err.message : 'Failed to create module'
-      });
+      addNotification({ type: 'error', message: 'Failed to create module' });
     } finally {
       setLoading(false);
     }
@@ -226,6 +218,8 @@ function ModulesManagement() {
       semester: module.semester || 1,
       order_index: module.order_index || 1,
       is_published: module.is_published ?? true,
+      // Convert Bytes (Database) back to Megabytes (UI)
+      size_mb: module.size_bytes ? Number((module.size_bytes / (1024 * 1024)).toFixed(2)) : 0,
     });
   };
 
@@ -244,25 +238,21 @@ function ModulesManagement() {
           semester: editFormData.semester,
           order_index: editFormData.order_index,
           is_published: editFormData.is_published,
+          // Convert Megabytes (UI) to Bytes (Database)
+          size_bytes: Math.round(editFormData.size_mb * 1024 * 1024)
         })
         .eq('id', moduleId);
 
       if (error) throw error;
 
-      addNotification({
-        type: 'success',
-        message: 'Module updated successfully!'
-      });
+      addNotification({ type: 'success', message: 'Module updated successfully!' });
 
       setEditingModuleId(null);
       loadModules();
 
     } catch (err) {
       console.error("Update Module Error:", err);
-      addNotification({
-        type: 'error',
-        message: err instanceof Error ? err.message : 'Failed to update module'
-      });
+      addNotification({ type: 'error', message: 'Failed to update module' });
     } finally {
       setLoading(false);
     }
@@ -279,17 +269,11 @@ function ModulesManagement() {
 
       if (error) throw error;
 
-      addNotification({
-        type: 'success',
-        message: 'Module deleted successfully!'
-      });
+      addNotification({ type: 'success', message: 'Module deleted successfully!' });
       loadModules();
 
     } catch (err) {
-      addNotification({
-        type: 'error',
-        message: 'Failed to delete module'
-      });
+      addNotification({ type: 'error', message: 'Failed to delete module' });
     }
   };
 
@@ -300,15 +284,10 @@ function ModulesManagement() {
         <button
           onClick={() => {
             setShowForm(true);
-            setEditingModuleId(null); // Close edit form if adding new
+            setEditingModuleId(null);
             setFormData({
-              title: '',
-              description: '',
-              icon: '📚',
-              color: '#5b6af0',
-              semester: 1,
-              order_index: 1,
-              is_published: true,
+              title: '', description: '', icon: '📚', color: '#5b6af0',
+              semester: 1, order_index: 1, is_published: true, size_mb: 0
             });
           }}
           className="flex items-center space-x-2 bg-[#5b6af0] hover:bg-[#4a5ae0] text-white px-4 py-2 rounded-lg transition-colors"
@@ -333,9 +312,7 @@ function ModulesManagement() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#e8eaf6] mb-2">
-                Module Title *
-              </label>
+              <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Module Title *</label>
               <input
                 type="text"
                 value={formData.title}
@@ -347,9 +324,7 @@ function ModulesManagement() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#e8eaf6] mb-2">
-                Description
-              </label>
+              <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -359,42 +334,34 @@ function ModulesManagement() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">
-                  Icon (Emoji)
-                </label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Icon (Emoji)</label>
                 <input
                   type="text"
                   value={formData.icon}
                   onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] placeholder-[#8890b5] focus:outline-none focus:ring-2 focus:ring-[#5b6af0] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
                   placeholder="📚"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">
-                  Color
-                </label>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Color</label>
                 <input
                   type="color"
                   value={formData.color}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="w-full h-12 px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0] focus:border-transparent"
+                  className="w-full h-12 px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">
-                  Semester
-                </label>
+                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Semester</label>
                 <select
                   value={formData.semester}
                   onChange={(e) => setFormData({ ...formData, semester: parseInt(e.target.value) || 1 })}
-                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
                 >
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
                     <option key={sem} value={sem}>Semester {sem}</option>
@@ -403,20 +370,32 @@ function ModulesManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">
-                  Order
-                </label>
+                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Order</label>
                 <input
                   type="number"
                   value={formData.order_index}
                   onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 1 })}
-                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] placeholder-[#8890b5] focus:outline-none focus:ring-2 focus:ring-[#5b6af0] focus:border-transparent"
-                  placeholder="1"
+                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
+                />
+              </div>
+
+              {/* NEW SIZE INPUT */}
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-[#e8eaf6] mb-2 flex items-center gap-2">
+                  <Database className="w-4 h-4" /> Size (MB)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.size_mb}
+                  onChange={(e) => setFormData({ ...formData, size_mb: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
+                  placeholder="e.g., 2.5"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-3 pt-4">
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
@@ -427,19 +406,9 @@ function ModulesManagement() {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-[#5b6af0] hover:bg-[#4a5ae0] text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                className="bg-[#5b6af0] hover:bg-[#4a5ae0] text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center space-x-2"
               >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4" />
-                    <span>Create Module</span>
-                  </>
-                )}
+                {loading ? 'Creating...' : 'Create Module'}
               </button>
             </div>
           </form>
@@ -457,7 +426,9 @@ function ModulesManagement() {
               }`}
             >
               {editingModuleId === module.id ? (
-                /* Edit Mode UI */
+                /* ----------------- */
+                /* EDIT MODE UI    */
+                /* ----------------- */
                 <form onSubmit={(e) => handleUpdateModule(e, module.id)} className="space-y-4">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-lg font-semibold text-[#e8eaf6]">Edit Module</h4>
@@ -475,7 +446,7 @@ function ModulesManagement() {
                       type="text"
                       value={editFormData.title}
                       onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                      className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0] focus:border-transparent"
+                      className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
                       placeholder="Module Title"
                       required
                     />
@@ -485,13 +456,13 @@ function ModulesManagement() {
                     <textarea
                       value={editFormData.description}
                       onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                      className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0] focus:border-transparent"
+                      className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
                       placeholder="Description"
                       rows={2}
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div>
                       <input
                         type="text"
@@ -499,6 +470,7 @@ function ModulesManagement() {
                         onChange={(e) => setEditFormData({ ...editFormData, icon: e.target.value })}
                         className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
                         placeholder="Icon 📚"
+                        title="Icon Emoji"
                       />
                     </div>
                     <div>
@@ -507,6 +479,7 @@ function ModulesManagement() {
                         value={editFormData.color}
                         onChange={(e) => setEditFormData({ ...editFormData, color: e.target.value })}
                         className="w-full h-10 px-2 py-1 bg-[#0c0f1a] border border-[#1e2340] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
+                        title="Color"
                       />
                     </div>
                     <div>
@@ -514,6 +487,7 @@ function ModulesManagement() {
                         value={editFormData.semester}
                         onChange={(e) => setEditFormData({ ...editFormData, semester: parseInt(e.target.value) || 1 })}
                         className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
+                        title="Semester"
                       >
                         {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
                           <option key={sem} value={sem}>Sem {sem}</option>
@@ -527,6 +501,20 @@ function ModulesManagement() {
                         onChange={(e) => setEditFormData({ ...editFormData, order_index: parseInt(e.target.value) || 1 })}
                         className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
                         placeholder="Order"
+                        title="Order Index"
+                      />
+                    </div>
+                    
+                    {/* NEW SIZE INPUT IN EDIT MODE */}
+                    <div>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={editFormData.size_mb}
+                        onChange={(e) => setEditFormData({ ...editFormData, size_mb: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
+                        placeholder="Size (MB)"
+                        title="File Size (MB)"
                       />
                     </div>
                   </div>
@@ -542,14 +530,16 @@ function ModulesManagement() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="bg-[#5b6af0] hover:bg-[#4a5ae0] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center space-x-2"
+                      className="bg-[#5b6af0] hover:bg-[#4a5ae0] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
                     >
                       {loading ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
                 </form>
               ) : (
-                /* View Mode UI */
+                /* ----------------- */
+                /* VIEW MODE UI    */
+                /* ----------------- */
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-4">
                     <div
@@ -562,9 +552,21 @@ function ModulesManagement() {
                       <h4 className="text-lg font-semibold text-[#e8eaf6]">{module.title}</h4>
                       <p className="text-sm text-[#8890b5] line-clamp-1">{module.description || 'No description'}</p>
                       <div className="flex items-center space-x-3 text-xs text-[#8890b5] mt-1">
-                        <span>Semester {module.semester}</span>
+                        <span>Sem {module.semester}</span>
                         <span>•</span>
                         <span>Order {module.order_index}</span>
+                        
+                        {/* Preview the Size dynamically */}
+                        {module.size_bytes !== undefined && module.size_bytes > 0 && (
+                          <>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <Database className="w-3 h-3" />
+                              {(module.size_bytes / (1024 * 1024)).toFixed(2)} MB
+                            </span>
+                          </>
+                        )}
+                        
                         <span>•</span>
                         <span className={module.is_published ? 'text-[#4ecca3]' : 'text-[#8890b5]'}>
                           {module.is_published ? 'Published' : 'Draft'}
@@ -604,12 +606,16 @@ function ModulesManagement() {
   );
 }
 
-// Lessons Management Component
+// ==========================================
+// LESSONS MANAGEMENT COMPONENT
+// ==========================================
 function LessonsManagement() {
   return <LessonManager />;
 }
 
-// Users Management Component
+// ==========================================
+// USERS MANAGEMENT COMPONENT
+// ==========================================
 function UsersManagement() {
   const { addNotification } = useNotifications();
   const [users, setUsers] = useState<any[]>([]);
@@ -634,10 +640,7 @@ function UsersManagement() {
 
       setUsers(combinedUsers);
     } catch (err) {
-      addNotification({
-        type: 'error',
-        message: 'Failed to load users'
-      });
+      addNotification({ type: 'error', message: 'Failed to load users' });
     } finally {
       setLoading(false);
     }
@@ -656,17 +659,11 @@ function UsersManagement() {
 
       if (error) throw error;
 
-      addNotification({
-        type: 'success',
-        message: 'User role updated successfully!'
-      });
+      addNotification({ type: 'success', message: 'User role updated successfully!' });
       loadUsers();
 
     } catch (err) {
-      addNotification({
-        type: 'error',
-        message: 'Failed to update user role'
-      });
+      addNotification({ type: 'error', message: 'Failed to update user role' });
     }
   };
 

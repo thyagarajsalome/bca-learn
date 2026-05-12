@@ -5,7 +5,7 @@ import ProgressBar from '../progress/ProgressBar';
 
 // Helper function to format raw bytes into readable sizes
 const formatBytes = (bytes?: number) => {
-  if (!bytes || bytes === 0) return '0 KB';
+  if (bytes === undefined || bytes === null || bytes === 0) return '0 KB';
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -98,13 +98,11 @@ export default function ModuleCard({
         {getStatusBadge()}
         
         <div className="flex items-center space-x-4 text-xs text-[#8890b5]">
-          {/* Size Indicator */}
-          {module.size_bytes !== undefined && module.size_bytes > 0 && (
-            <div className="flex items-center space-x-1" title="Module Size">
-              <Database className="w-3.5 h-3.5" />
-              <span>{formatBytes(module.size_bytes)}</span>
-            </div>
-          )}
+          {/* Size Indicator (Now always shows) */}
+          <div className="flex items-center space-x-1" title="Module Size">
+            <Database className="w-3.5 h-3.5" />
+            <span>{formatBytes(module.size_bytes)}</span>
+          </div>
 
           {/* Date Indicator */}
           <div className="flex items-center space-x-1" title="Last Updated">
@@ -112,7 +110,7 @@ export default function ModuleCard({
             <span>
               {module.updated_at 
                 ? new Date(module.updated_at).toLocaleDateString() 
-                : 'Updated recently'}
+                : 'No date yet'}
             </span>
           </div>
         </div>
