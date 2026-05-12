@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { BookOpen, Users, LogOut, Plus, X, RefreshCw, Layers } from 'lucide-react';
+import { BookOpen, Users, LogOut, Plus, X, RefreshCw, Layers, Edit2 } from 'lucide-react';
 import LessonManager from '../components/admin/LessonManager';
 import { useNotifications } from '../contexts/NotificationContext';
 import { supabase } from '../lib/supabase';
@@ -123,6 +123,18 @@ function ModulesManagement() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modules, setModules] = useState<any[]>([]);
+  
+  // States for Edit Mode
+  const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    description: '',
+    icon: '📚',
+    color: '#5b6af0',
+    semester: 1,
+    order_index: 1,
+    is_published: true,
+  });
 
   const [formData, setFormData] = useState({
     title: '',
@@ -170,7 +182,6 @@ function ModulesManagement() {
           semester: formData.semester,
           order_index: formData.order_index,
           is_published: formData.is_published,
-          // UPDATED: Removed manual created_at to let database handle it
         })
         .select()
         .single();
@@ -195,10 +206,62 @@ function ModulesManagement() {
       loadModules();
 
     } catch (err) {
-      console.error("Create Module Error:", err); // Added error logging
+      console.error("Create Module Error:", err);
       addNotification({
         type: 'error',
         message: err instanceof Error ? err.message : 'Failed to create module'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditClick = (module: any) => {
+    setEditingModuleId(module.id);
+    setEditFormData({
+      title: module.title,
+      description: module.description || '',
+      icon: module.icon || '📚',
+      color: module.color || '#5b6af0',
+      semester: module.semester || 1,
+      order_index: module.order_index || 1,
+      is_published: module.is_published ?? true,
+    });
+  };
+
+  const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('modules')
+        .update({
+          title: editFormData.title,
+          description: editFormData.description,
+          icon: editFormData.icon,
+          color: editFormData.color,
+          semester: editFormData.semester,
+          order_index: editFormData.order_index,
+          is_published: editFormData.is_published,
+        })
+        .eq('id', moduleId);
+
+      if (error) throw error;
+
+      addNotification({
+        type: 'success',
+        message: 'Module updated successfully!'
+      });
+
+      setEditingModuleId(null);
+      loadModules();
+
+    } catch (err) {
+      console.error("Update Module Error:", err);
+      addNotification({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to update module'
       });
     } finally {
       setLoading(false);
@@ -237,6 +300,7 @@ function ModulesManagement() {
         <button
           onClick={() => {
             setShowForm(true);
+            setEditingModuleId(null); // Close edit form if adding new
             setFormData({
               title: '',
               description: '',
@@ -254,7 +318,7 @@ function ModulesManagement() {
         </button>
       </div>
 
-      {/* Module Form */}
+      {/* Module Create Form */}
       {showForm && (
         <div className="bg-[#13172a] rounded-xl border border-[#1e2340] p-6">
           <div className="flex items-center justify-between mb-6">
@@ -367,7 +431,6 @@ function ModulesManagement() {
               >
                 {loading ? (
                   <>
-                    {/* UPDATED: Fixed hex color typo border-[#e8e0] -> border-white */}
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>Creating...</span>
                   </>
@@ -389,38 +452,144 @@ function ModulesManagement() {
           modules.map((module) => (
             <div
               key={module.id}
-              className="bg-[#13172a] rounded-lg p-4 border border-[#1e2340] hover:border-[#5b6af0]/50 transition-colors"
+              className={`bg-[#13172a] rounded-lg p-4 border transition-colors ${
+                editingModuleId === module.id ? 'border-[#5b6af0]' : 'border-[#1e2340] hover:border-[#5b6af0]/50'
+              }`}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                    style={{ backgroundColor: `${module.color}20`, color: module.color }}
-                  >
-                    {module.icon}
+              {editingModuleId === module.id ? (
+                /* Edit Mode UI */
+                <form onSubmit={(e) => handleUpdateModule(e, module.id)} className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-lg font-semibold text-[#e8eaf6]">Edit Module</h4>
+                    <button
+                      type="button"
+                      onClick={() => setEditingModuleId(null)}
+                      className="text-[#8890b5] hover:text-[#e8eaf6] transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
                   </div>
+
                   <div>
-                    <h4 className="text-lg font-semibold text-[#e8eaf6]">{module.title}</h4>
-                    <p className="text-sm text-[#8890b5] line-clamp-1">{module.description || 'No description'}</p>
-                    <div className="flex items-center space-x-3 text-xs text-[#8890b5] mt-1">
-                      <span>Semester {module.semester}</span>
-                      <span>•</span>
-                      <span>Order {module.order_index}</span>
-                      <span>•</span>
-                      <span className={module.is_published ? 'text-[#4ecca3]' : 'text-[#8890b5]'}>
-                        {module.is_published ? 'Published' : 'Draft'}
-                      </span>
+                    <input
+                      type="text"
+                      value={editFormData.title}
+                      onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                      className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0] focus:border-transparent"
+                      placeholder="Module Title"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <textarea
+                      value={editFormData.description}
+                      onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                      className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0] focus:border-transparent"
+                      placeholder="Description"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <input
+                        type="text"
+                        value={editFormData.icon}
+                        onChange={(e) => setEditFormData({ ...editFormData, icon: e.target.value })}
+                        className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
+                        placeholder="Icon 📚"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="color"
+                        value={editFormData.color}
+                        onChange={(e) => setEditFormData({ ...editFormData, color: e.target.value })}
+                        className="w-full h-10 px-2 py-1 bg-[#0c0f1a] border border-[#1e2340] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
+                      />
+                    </div>
+                    <div>
+                      <select
+                        value={editFormData.semester}
+                        onChange={(e) => setEditFormData({ ...editFormData, semester: parseInt(e.target.value) || 1 })}
+                        className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
+                          <option key={sem} value={sem}>Sem {sem}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <input
+                        type="number"
+                        value={editFormData.order_index}
+                        onChange={(e) => setEditFormData({ ...editFormData, order_index: parseInt(e.target.value) || 1 })}
+                        className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
+                        placeholder="Order"
+                      />
                     </div>
                   </div>
+
+                  <div className="flex justify-end space-x-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingModuleId(null)}
+                      className="px-4 py-2 rounded-lg border border-[#1e2340] text-[#8890b5] hover:text-[#e8eaf6] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="bg-[#5b6af0] hover:bg-[#4a5ae0] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center space-x-2"
+                    >
+                      {loading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* View Mode UI */
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                      style={{ backgroundColor: `${module.color}20`, color: module.color }}
+                    >
+                      {module.icon}
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-[#e8eaf6]">{module.title}</h4>
+                      <p className="text-sm text-[#8890b5] line-clamp-1">{module.description || 'No description'}</p>
+                      <div className="flex items-center space-x-3 text-xs text-[#8890b5] mt-1">
+                        <span>Semester {module.semester}</span>
+                        <span>•</span>
+                        <span>Order {module.order_index}</span>
+                        <span>•</span>
+                        <span className={module.is_published ? 'text-[#4ecca3]' : 'text-[#8890b5]'}>
+                          {module.is_published ? 'Published' : 'Draft'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleEditClick(module)}
+                      className="p-2 rounded-lg hover:bg-blue-500/20 text-[#8890b5] hover:text-blue-400 transition-colors"
+                      title="Edit Module"
+                    >
+                      <Edit2 className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(module.id)}
+                      className="p-2 rounded-lg hover:bg-red-500/20 text-[#8890b5] hover:text-red-400 transition-colors"
+                      title="Delete Module"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => handleDelete(module.id)}
-                  className="p-2 rounded-lg hover:bg-red-500/20 text-[#8890b5] hover:text-red-400 transition-colors"
-                  title="Delete Module"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+              )}
             </div>
           ))
         ) : (
