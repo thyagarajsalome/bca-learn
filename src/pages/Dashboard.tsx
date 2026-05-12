@@ -15,35 +15,31 @@ import type { Lesson, Module } from '../types';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
-  const { data: modules, isLoading: modulesLoading } = useModules();
+
+  // 1. Declare state FIRST so the hook below can access it
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // 2. Pass the search query directly to the database hook
+  const { data: modules, isLoading: modulesLoading } = useModules({ searchQuery });
   const { data: allLessons, isLoading: lessonsLoading } = useLessons();
   
-  // FIX: Passed total count to hook for accurate calculation
   const { progressMap, overallPercent, calculateModuleProgress } = useProgress(
     user?.id || '',
     allLessons?.length || 0
   );
 
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // FIX: Explicitly type moduleProgressData to avoid redline indexing errors
   const moduleProgressData: Record<string, { completed: number; total: number }> = useMemo(() => {
     return allLessons ? calculateModuleProgress(allLessons) : {};
   }, [allLessons, calculateModuleProgress]);
 
-  // Filter modules based on search query
-  const filteredModules = modules?.filter(module =>
-    module.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    module.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
-
-  // FIX: Created a helper to keep progress data alongside modules without breaking types
+  // 3. Removed 'filteredModules' and used the 'modules' array directly from the DB
   const modulesWithProgress = useMemo(() => {
-    return filteredModules.map(module => ({
+    const activeModules = modules || [];
+    return activeModules.map(module => ({
       ...module,
       progress: moduleProgressData[module.id] || { completed: 0, total: 0 },
     }));
-  }, [filteredModules, moduleProgressData]);
+  }, [modules, moduleProgressData]);
 
   // Get continue learning items
   const continueLearning = allLessons
@@ -137,8 +133,9 @@ export default function Dashboard() {
               </div>
 
               <div>
+                {/* 4. Updated the count here to use the dynamic DB length */}
                 <h2 className="text-xl font-semibold text-[#e8eaf6] mb-4">
-                  All Modules ({filteredModules.length})
+                  All Modules ({modules?.length || 0})
                 </h2>
 
                 <div className="space-y-4">
@@ -159,7 +156,6 @@ export default function Dashboard() {
             <div className="space-y-6">
               <OverallProgress
                 overallPercent={overallPercent}
-                // FIX: Added safe fallback for colors and typed the accumulator
                 moduleProgress={Object.entries(moduleProgressData).reduce((acc, [moduleId, data]) => {
                   const module = modules?.find(m => m.id === moduleId);
                   if (module) {
