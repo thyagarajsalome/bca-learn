@@ -1,7 +1,16 @@
-import { BookOpen, Clock, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Clock, CheckCircle2, Database } from 'lucide-react';
 import type { Module } from '../../types';
 import Badge from '../ui/Badge';
 import ProgressBar from '../progress/ProgressBar';
+
+// Helper function to format raw bytes into readable sizes
+const formatBytes = (bytes?: number) => {
+  if (!bytes || bytes === 0) return '0 KB';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
 interface ModuleCardProps {
   module: Module;
@@ -51,23 +60,25 @@ export default function ModuleCard({
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
             style={{ backgroundColor: `${module.color}20`, color: module.color }}
           >
             {module.icon}
           </div>
           <div className="text-left">
-            <h3 className="text-lg font-semibold text-[#e8eaf6] group-hover:text-[#5b6af0] transition-colors">
+            <h3 className="text-lg font-semibold text-[#e8eaf6] group-hover:text-[#5b6af0] transition-colors line-clamp-1">
               {module.title}
             </h3>
             <div className="flex items-center space-x-2 mt-1">
-              <span className="text-xs text-[#8890b5]">Semester {module.semester}</span>
+              <span className="text-xs text-[#8890b5] whitespace-nowrap">Semester {module.semester}</span>
               <span className="text-xs text-[#8890b5]">•</span>
-              <span className="text-xs text-[#8890b5]">{lessonCount} lessons</span>
+              <span className="text-xs text-[#8890b5] whitespace-nowrap">{lessonCount} lessons</span>
             </div>
           </div>
         </div>
-        {getStatusIcon()}
+        <div className="shrink-0 ml-2">
+          {getStatusIcon()}
+        </div>
       </div>
 
       {/* Description */}
@@ -83,11 +94,27 @@ export default function ModuleCard({
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-auto">
         {getStatusBadge()}
-        <div className="flex items-center space-x-2 text-xs text-[#8890b5]">
-          <Clock className="w-4 h-4" />
-          <span>Updated recently</span>
+        
+        <div className="flex items-center space-x-4 text-xs text-[#8890b5]">
+          {/* Size Indicator */}
+          {module.size_bytes !== undefined && module.size_bytes > 0 && (
+            <div className="flex items-center space-x-1" title="Module Size">
+              <Database className="w-3.5 h-3.5" />
+              <span>{formatBytes(module.size_bytes)}</span>
+            </div>
+          )}
+
+          {/* Date Indicator */}
+          <div className="flex items-center space-x-1" title="Last Updated">
+            <Clock className="w-3.5 h-3.5" />
+            <span>
+              {module.updated_at 
+                ? new Date(module.updated_at).toLocaleDateString() 
+                : 'Updated recently'}
+            </span>
+          </div>
         </div>
       </div>
     </button>
