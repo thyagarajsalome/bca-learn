@@ -75,7 +75,6 @@ export default function LessonManager() {
       };
 
       if (editingLesson) {
-        // UPDATE: Removed updated_at completely to prevent the 400 error
         const { error } = await supabase
           .from('lessons')
           .update(lessonDataToSave)
@@ -84,7 +83,6 @@ export default function LessonManager() {
         if (error) throw error;
         addNotification({ type: 'success', message: 'Lesson updated successfully!' });
       } else {
-        // INSERT: created_at is valid for new records
         const { error } = await supabase
           .from('lessons')
           .insert({ ...lessonDataToSave, created_at: new Date().toISOString() });
@@ -227,7 +225,7 @@ export default function LessonManager() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Order</label>
+                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Order Index</label>
                 <input
                   type="number"
                   value={formData.order_index}
