@@ -16,7 +16,10 @@ interface LessonFormData {
 }
 
 export default function LessonManager() {
-  const { data: modules } = useModules();
+  // 1. Updated to grab the response object and extract the data array
+  const { data: modulesResponse } = useModules();
+  const modulesArray = modulesResponse?.data || [];
+
   const { addNotification } = useNotifications();
   const [showForm, setShowForm] = useState(false);
   const [editingLesson, setEditingLesson] = useState<any | null>(null);
@@ -130,7 +133,8 @@ export default function LessonManager() {
   };
 
   const getModuleName = (moduleId: string) => {
-    return modules?.find(m => m.id === moduleId)?.title || 'Unknown Module';
+    // 2. Updated to search through modulesArray instead of the raw modules object
+    return modulesArray.find(m => m.id === moduleId)?.title || 'Unknown Module';
   };
 
   return (
@@ -175,7 +179,8 @@ export default function LessonManager() {
                   required
                 >
                   <option value="">Select a module</option>
-                  {modules?.map((module) => (
+                  {/* 3. Updated to map over modulesArray */}
+                  {modulesArray.map((module) => (
                     <option key={module.id} value={module.id}>{module.title}</option>
                   ))}
                 </select>
