@@ -16,43 +16,45 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
 
-  // 1. Declare state FIRST so the hook below can access it
   const [searchQuery, setSearchQuery] = useState('');
 
-  // 2. Pass the search query directly to the database hook
-  const { data: modules, isLoading: modulesLoading } = useModules({ searchQuery });
-  const { data: allLessons, isLoading: lessonsLoading } = useLessons();
+  // 1. Get the paginated response objects
+  const { data: modulesResponse, isLoading: modulesLoading } = useModules({ searchQuery });
+  const { data: lessonsResponse, isLoading: lessonsLoading } = useLessons();
   
+  // 2. Safely extract the actual arrays from the '.data' property
+  const modulesArray = modulesResponse?.data || [];
+  const lessonsArray = lessonsResponse?.data || [];
+
   const { progressMap, overallPercent, calculateModuleProgress } = useProgress(
     user?.id || '',
-    allLessons?.length || 0
+    lessonsResponse?.totalCount || lessonsArray.length || 0
   );
 
   const moduleProgressData: Record<string, { completed: number; total: number }> = useMemo(() => {
-    return allLessons ? calculateModuleProgress(allLessons) : {};
-  }, [allLessons, calculateModuleProgress]);
+    return lessonsArray.length > 0 ? calculateModuleProgress(lessonsArray) : {};
+  }, [lessonsArray, calculateModuleProgress]);
 
-  // 3. Removed 'filteredModules' and used the 'modules' array directly from the DB
+  // 3. Map over the extracted array (fixes the activeModules.map error)
   const modulesWithProgress = useMemo(() => {
-    const activeModules = modules || [];
-    return activeModules.map(module => ({
+    return modulesArray.map(module => ({
       ...module,
       progress: moduleProgressData[module.id] || { completed: 0, total: 0 },
     }));
-  }, [modules, moduleProgressData]);
+  }, [modulesArray, moduleProgressData]);
 
   // Get continue learning items
-  const continueLearning = allLessons
-    ?.filter(lesson => progressMap[lesson.id] === 'in_progress')
+  const continueLearning = lessonsArray
+    .filter(lesson => progressMap[lesson.id] === 'in_progress')
     .slice(0, 3)
     .map(lesson => {
-      const module = modules?.find(m => m.id === lesson.module_id);
+      const module = modulesArray.find(m => m.id === lesson.module_id);
       return {
         id: lesson.id,
         title: lesson.title,
         module: module?.title || 'Unknown Module',
       };
-    }) || [];
+    });
 
   const handleLessonClick = (lesson: { id: string }) => {
     navigate(`/lesson/${lesson.id}`);
@@ -112,7 +114,8 @@ export default function Dashboard() {
                 <div className="bg-[#13172a] rounded-xl p-6 border border-[#1e2340]">
                   <div className="flex items-center justify-between mb-2">
                     <BookOpen className="w-5 h-5 text-[#5b6af0]" />
-                    <span className="text-2xl font-bold text-[#e8eaf6]">{modules?.length || 0}</span>
+                    {/* Use totalCount from the pagination response */}
+                    <span className="text-2xl font-bold text-[#e8eaf6]">{modulesResponse?.totalCount || modulesArray.length || 0}</span>
                   </div>
                   <p className="text-sm text-[#8890b5]">Total Modules</p>
                 </div>
@@ -126,16 +129,15 @@ export default function Dashboard() {
                 <div className="bg-[#13172a] rounded-xl p-6 border border-[#1e2340]">
                   <div className="flex items-center justify-between mb-2">
                     <BookOpen className="w-5 h-5 text-[#f0b15b]" />
-                    <span className="text-2xl font-bold text-[#e8eaf6]">{allLessons?.length || 0}</span>
+                    <span className="text-2xl font-bold text-[#e8eaf6]">{lessonsResponse?.totalCount || lessonsArray.length || 0}</span>
                   </div>
                   <p className="text-sm text-[#8890b5]">Total Lessons</p>
                 </div>
               </div>
 
               <div>
-                {/* 4. Updated the count here to use the dynamic DB length */}
                 <h2 className="text-xl font-semibold text-[#e8eaf6] mb-4">
-                  All Modules ({modules?.length || 0})
+                  All Modules ({modulesResponse?.totalCount || modulesArray.length || 0})
                 </h2>
 
                 <div className="space-y-4">
@@ -143,7 +145,7 @@ export default function Dashboard() {
                     <ModuleAccordion
                       key={module.id}
                       module={module as Module}
-                      lessons={allLessons?.filter(l => l.module_id === module.id) || []}
+                      lessons={lessonsArray.filter(l => l.module_id === module.id)}
                       progressMap={progressMap}
                       onLessonClick={handleLessonClick}
                       isDefaultOpen={module.progress.completed > 0}
@@ -157,7 +159,7 @@ export default function Dashboard() {
               <OverallProgress
                 overallPercent={overallPercent}
                 moduleProgress={Object.entries(moduleProgressData).reduce((acc, [moduleId, data]) => {
-                  const module = modules?.find(m => m.id === moduleId);
+                  const module = modulesArray.find(m => m.id === moduleId);
                   if (module) {
                     acc[moduleId] = {
                       ...data,

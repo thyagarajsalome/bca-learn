@@ -73,7 +73,46 @@ export function useProgress(userId: string, totalLessonsCount: number = 0) {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    // OPTIMISTIC UPDATE LOGIC START
+    onMutate: async (lessonId: string) => {
+      // 1. Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['progress', userId] });
+
+      // 2. Snapshot the previous value so we can roll back if needed
+      const previousProgress = queryClient.getQueryData<UserProgress[]>(['progress', userId]);
+
+      // 3. Optimistically update the cache
+      queryClient.setQueryData<UserProgress[]>(['progress', userId], (old = []) => {
+        const existingIndex = old.findIndex(p => p.lesson_id === lessonId);
+        const optimisticRecord: UserProgress = {
+          id: existingIndex >= 0 ? old[existingIndex].id : 'temp-id', 
+          user_id: userId,
+          lesson_id: lessonId,
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          last_accessed: new Date().toISOString(),
+        };
+
+        if (existingIndex >= 0) {
+          const newData = [...old];
+          newData[existingIndex] = optimisticRecord;
+          return newData;
+        } else {
+          return [...old, optimisticRecord];
+        }
+      });
+
+      // 4. Return context object with the snapshotted value
+      return { previousProgress };
+    },
+    // If the mutation fails, use the context returned from onMutate to roll back
+    onError: (err, newTodo, context) => {
+      if (context?.previousProgress) {
+        queryClient.setQueryData(['progress', userId], context.previousProgress);
+      }
+    },
+    // Always refetch after error or success to sync up completely with the server
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['progress', userId] });
     },
   });
@@ -93,7 +132,38 @@ export function useProgress(userId: string, totalLessonsCount: number = 0) {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    // OPTIMISTIC UPDATE LOGIC START
+    onMutate: async (lessonId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['progress', userId] });
+      const previousProgress = queryClient.getQueryData<UserProgress[]>(['progress', userId]);
+
+      queryClient.setQueryData<UserProgress[]>(['progress', userId], (old = []) => {
+        const existingIndex = old.findIndex(p => p.lesson_id === lessonId);
+        const optimisticRecord: UserProgress = {
+          id: existingIndex >= 0 ? old[existingIndex].id : 'temp-id',
+          user_id: userId,
+          lesson_id: lessonId,
+          status: 'in_progress',
+          last_accessed: new Date().toISOString(),
+        };
+
+        if (existingIndex >= 0) {
+          const newData = [...old];
+          newData[existingIndex] = optimisticRecord;
+          return newData;
+        } else {
+          return [...old, optimisticRecord];
+        }
+      });
+
+      return { previousProgress };
+    },
+    onError: (err, newTodo, context) => {
+      if (context?.previousProgress) {
+        queryClient.setQueryData(['progress', userId], context.previousProgress);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['progress', userId] });
     },
   });
