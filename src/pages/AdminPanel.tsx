@@ -217,7 +217,7 @@ function ModulesManagement() {
     });
   };
 
-  const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
+const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
     e.preventDefault();
     setLoading(true);
 
@@ -242,9 +242,13 @@ function ModulesManagement() {
       setEditingModuleId(null);
       loadModules();
 
-    } catch (err) {
-      console.error("Update Module Error:", err);
-      addNotification({ type: 'error', message: 'Failed to update module' });
+    } catch (err: any) {
+      // 🚨 UPDATED CATCH BLOCK to show the EXACT error reason 🚨
+      console.error("Full Error Details:", err);
+      addNotification({ 
+        type: 'error', 
+        message: err.message || err.details || 'Failed to update module' 
+      });
     } finally {
       setLoading(false);
     }
