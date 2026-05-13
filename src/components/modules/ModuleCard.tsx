@@ -1,16 +1,7 @@
-import { BookOpen, Clock, CheckCircle2, Database } from 'lucide-react';
+import { BookOpen, Clock, CheckCircle2 } from 'lucide-react';
 import type { Module } from '../../types';
 import Badge from '../ui/Badge';
 import ProgressBar from '../progress/ProgressBar';
-
-// Helper function to format raw bytes into readable sizes
-const formatBytes = (bytes?: number) => {
-  if (bytes === undefined || bytes === null || bytes === 0) return '0 KB';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
 
 interface ModuleCardProps {
   module: Module;
@@ -96,24 +87,6 @@ export default function ModuleCard({
       {/* Footer */}
       <div className="flex items-center justify-between mt-auto">
         {getStatusBadge()}
-        
-        <div className="flex items-center space-x-4 text-xs text-[#8890b5]">
-          {/* Size Indicator (Now always shows) */}
-          <div className="flex items-center space-x-1" title="Module Size">
-            <Database className="w-3.5 h-3.5" />
-            <span>{formatBytes(module.size_bytes)}</span>
-          </div>
-
-          {/* Date Indicator */}
-          <div className="flex items-center space-x-1" title="Last Updated">
-            <Clock className="w-3.5 h-3.5" />
-            <span>
-              {module.updated_at 
-                ? new Date(module.updated_at).toLocaleDateString() 
-                : 'No date yet'}
-            </span>
-          </div>
-        </div>
       </div>
     </button>
   );

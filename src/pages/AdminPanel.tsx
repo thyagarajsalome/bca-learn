@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { BookOpen, Users, LogOut, Plus, X, RefreshCw, Layers, Edit2, Database } from 'lucide-react';
+import { BookOpen, Users, LogOut, Plus, X, RefreshCw, Layers, Edit2 } from 'lucide-react';
 import LessonManager from '../components/admin/LessonManager';
 import { useNotifications } from '../contexts/NotificationContext';
 import { supabase } from '../lib/supabase';
@@ -136,7 +136,6 @@ function ModulesManagement() {
     semester: 1,
     order_index: 1,
     is_published: true,
-    size_mb: 0 // New field for UI (Megabytes)
   });
 
   const [formData, setFormData] = useState({
@@ -147,7 +146,6 @@ function ModulesManagement() {
     semester: 1,
     order_index: 1,
     is_published: true,
-    size_mb: 0 // New field for UI (Megabytes)
   });
 
   const loadModules = async () => {
@@ -183,8 +181,6 @@ function ModulesManagement() {
           semester: formData.semester,
           order_index: formData.order_index,
           is_published: formData.is_published,
-          // Convert Megabytes (UI) to Bytes (Database)
-          size_bytes: Math.round(formData.size_mb * 1024 * 1024) 
         })
         .select()
         .single();
@@ -195,7 +191,7 @@ function ModulesManagement() {
 
       setFormData({
         title: '', description: '', icon: '📚', color: '#5b6af0',
-        semester: 1, order_index: 1, is_published: true, size_mb: 0
+        semester: 1, order_index: 1, is_published: true
       });
       setShowForm(false);
       loadModules();
@@ -218,8 +214,6 @@ function ModulesManagement() {
       semester: module.semester || 1,
       order_index: module.order_index || 1,
       is_published: module.is_published ?? true,
-      // Convert Bytes (Database) back to Megabytes (UI)
-      size_mb: module.size_bytes ? Number((module.size_bytes / (1024 * 1024)).toFixed(2)) : 0,
     });
   };
 
@@ -238,8 +232,6 @@ function ModulesManagement() {
           semester: editFormData.semester,
           order_index: editFormData.order_index,
           is_published: editFormData.is_published,
-          // Convert Megabytes (UI) to Bytes (Database)
-          size_bytes: Math.round(editFormData.size_mb * 1024 * 1024)
         })
         .eq('id', moduleId);
 
@@ -287,7 +279,7 @@ function ModulesManagement() {
             setEditingModuleId(null);
             setFormData({
               title: '', description: '', icon: '📚', color: '#5b6af0',
-              semester: 1, order_index: 1, is_published: true, size_mb: 0
+              semester: 1, order_index: 1, is_published: true
             });
           }}
           className="flex items-center space-x-2 bg-[#5b6af0] hover:bg-[#4a5ae0] text-white px-4 py-2 rounded-lg transition-colors"
@@ -334,8 +326,8 @@ function ModulesManagement() {
               />
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="col-span-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Icon (Emoji)</label>
                 <input
                   type="text"
@@ -346,7 +338,7 @@ function ModulesManagement() {
                 />
               </div>
 
-              <div className="col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Color</label>
                 <input
                   type="color"
@@ -355,7 +347,9 @@ function ModulesManagement() {
                   className="w-full h-12 px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Semester</label>
                 <select
@@ -376,21 +370,6 @@ function ModulesManagement() {
                   value={formData.order_index}
                   onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 1 })}
                   className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                />
-              </div>
-
-              {/* NEW SIZE INPUT */}
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-[#e8eaf6] mb-2 flex items-center gap-2">
-                  <Database className="w-4 h-4" /> Size (MB)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.size_mb}
-                  onChange={(e) => setFormData({ ...formData, size_mb: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                  placeholder="e.g., 2.5"
                 />
               </div>
             </div>
@@ -462,7 +441,7 @@ function ModulesManagement() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <input
                         type="text"
@@ -504,19 +483,6 @@ function ModulesManagement() {
                         title="Order Index"
                       />
                     </div>
-                    
-                    {/* NEW SIZE INPUT IN EDIT MODE */}
-                    <div>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={editFormData.size_mb}
-                        onChange={(e) => setEditFormData({ ...editFormData, size_mb: parseFloat(e.target.value) || 0 })}
-                        className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                        placeholder="Size (MB)"
-                        title="File Size (MB)"
-                      />
-                    </div>
                   </div>
 
                   <div className="flex justify-end space-x-3 pt-2">
@@ -555,18 +521,6 @@ function ModulesManagement() {
                         <span>Sem {module.semester}</span>
                         <span>•</span>
                         <span>Order {module.order_index}</span>
-                        
-                        {/* Preview the Size dynamically */}
-                        {module.size_bytes !== undefined && module.size_bytes > 0 && (
-                          <>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              <Database className="w-3 h-3" />
-                              {(module.size_bytes / (1024 * 1024)).toFixed(2)} MB
-                            </span>
-                          </>
-                        )}
-                        
                         <span>•</span>
                         <span className={module.is_published ? 'text-[#4ecca3]' : 'text-[#8890b5]'}>
                           {module.is_published ? 'Published' : 'Draft'}

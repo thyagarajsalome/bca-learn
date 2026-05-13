@@ -9,8 +9,6 @@ export interface Module {
   semester: number;
   order_index: number;
   is_published: boolean;
-  updated_at?: string;  // NEW: Tracks date modified
-  size_bytes?: number;  // NEW: Tracks size in raw bytes
   lessons?: Lesson[];
 }
 

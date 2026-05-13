@@ -29,7 +29,7 @@ export default function LessonManager() {
     description: '',
     content: '',
     order_index: 1,
-    duration_minutes: 45,
+    duration_minutes: 15,
     is_published: true,
   };
 
@@ -113,7 +113,7 @@ export default function LessonManager() {
       description: lesson.description || '',
       content: lesson.content || '',
       order_index: lesson.order_index,
-      duration_minutes: lesson.duration_minutes || 45,
+      duration_minutes: lesson.duration_minutes || 15,
       is_published: lesson.is_published,
     });
     setShowForm(true);
