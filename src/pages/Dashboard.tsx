@@ -9,7 +9,7 @@ import ModuleAccordion from '../components/modules/ModuleAccordion';
 import SearchBar from '../components/ui/SearchBar';
 import OverallProgress from '../components/progress/OverallProgress';
 import Skeleton from '../components/ui/Skeleton';
-import { BookOpen, TrendingUp } from 'lucide-react';
+import { BookOpen, TrendingUp, Layers } from 'lucide-react';
 import type { Lesson, Module } from '../types';
 
 export default function Dashboard() {
@@ -17,12 +17,13 @@ export default function Dashboard() {
   const { user, profile, signOut } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // NEW: State to track which category (semester) is currently selected
+  const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
 
-  // 1. Get the paginated response objects
   const { data: modulesResponse, isLoading: modulesLoading } = useModules({ searchQuery });
   const { data: lessonsResponse, isLoading: lessonsLoading } = useLessons();
   
-  // 2. Safely extract the actual arrays from the '.data' property
   const modulesArray = modulesResponse?.data || [];
   const lessonsArray = lessonsResponse?.data || [];
 
@@ -35,7 +36,6 @@ export default function Dashboard() {
     return lessonsArray.length > 0 ? calculateModuleProgress(lessonsArray) : {};
   }, [lessonsArray, calculateModuleProgress]);
 
-  // 3. Map over the extracted array (fixes the activeModules.map error)
   const modulesWithProgress = useMemo(() => {
     return modulesArray.map(module => ({
       ...module,
@@ -43,7 +43,18 @@ export default function Dashboard() {
     }));
   }, [modulesArray, moduleProgressData]);
 
-  // Get continue learning items
+  // NEW: Extract unique semesters to create the Category tabs dynamically
+  const availableCategories = useMemo(() => {
+    const semesters = new Set(modulesArray.map(m => m.semester).filter(Boolean));
+    return Array.from(semesters).sort((a, b) => a - b);
+  }, [modulesArray]);
+
+  // NEW: Filter the displayed modules based on the selected category tab
+  const displayedModules = useMemo(() => {
+    if (selectedCategory === 'all') return modulesWithProgress;
+    return modulesWithProgress.filter(m => m.semester === selectedCategory);
+  }, [modulesWithProgress, selectedCategory]);
+
   const continueLearning = lessonsArray
     .filter(lesson => progressMap[lesson.id] === 'in_progress')
     .slice(0, 3)
@@ -114,7 +125,6 @@ export default function Dashboard() {
                 <div className="bg-[#13172a] rounded-xl p-6 border border-[#1e2340]">
                   <div className="flex items-center justify-between mb-2">
                     <BookOpen className="w-5 h-5 text-[#5b6af0]" />
-                    {/* Use totalCount from the pagination response */}
                     <span className="text-2xl font-bold text-[#e8eaf6]">{modulesResponse?.totalCount || modulesArray.length || 0}</span>
                   </div>
                   <p className="text-sm text-[#8890b5]">Total Modules</p>
@@ -135,22 +145,66 @@ export default function Dashboard() {
                 </div>
               </div>
 
+              {/* NEW: Category / Semester Filter Section */}
+              {availableCategories.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+                    <button
+                      onClick={() => setSelectedCategory('all')}
+                      className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+                        selectedCategory === 'all'
+                          ? 'bg-[#5b6af0] text-white border-[#5b6af0]'
+                          : 'bg-[#13172a] text-[#8890b5] border-[#1e2340] hover:border-[#5b6af0]/50 hover:text-[#e8eaf6]'
+                      }`}
+                    >
+                      All Subjects
+                    </button>
+                    {availableCategories.map(semester => {
+                      const count = modulesArray.filter(m => m.semester === semester).length;
+                      return (
+                        <button
+                          key={semester}
+                          onClick={() => setSelectedCategory(semester)}
+                          className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+                            selectedCategory === semester
+                              ? 'bg-[#5b6af0] text-white border-[#5b6af0]'
+                              : 'bg-[#13172a] text-[#8890b5] border-[#1e2340] hover:border-[#5b6af0]/50 hover:text-[#e8eaf6]'
+                          }`}
+                        >
+                          Semester {semester} <span className="ml-1 opacity-70">({count})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div>
-                <h2 className="text-xl font-semibold text-[#e8eaf6] mb-4">
-                  All Modules ({modulesResponse?.totalCount || modulesArray.length || 0})
+                <h2 className="text-xl font-semibold text-[#e8eaf6] mb-4 flex items-center">
+                  <Layers className="w-5 h-5 mr-2 text-[#5b6af0]" />
+                  {selectedCategory === 'all' ? 'All Modules' : `Semester ${selectedCategory} Modules`} 
+                  <span className="ml-2 text-sm text-[#8890b5] font-normal">
+                    ({displayedModules.length})
+                  </span>
                 </h2>
 
                 <div className="space-y-4">
-                  {modulesWithProgress.map((module) => (
-                    <ModuleAccordion
-                      key={module.id}
-                      module={module as Module}
-                      lessons={lessonsArray.filter(l => l.module_id === module.id)}
-                      progressMap={progressMap}
-                      onLessonClick={handleLessonClick}
-                      isDefaultOpen={module.progress.completed > 0}
-                    />
-                  ))}
+                  {displayedModules.length > 0 ? (
+                    displayedModules.map((module) => (
+                      <ModuleAccordion
+                        key={module.id}
+                        module={module as Module}
+                        lessons={lessonsArray.filter(l => l.module_id === module.id)}
+                        progressMap={progressMap}
+                        onLessonClick={handleLessonClick}
+                        isDefaultOpen={module.progress.completed > 0}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-12 bg-[#13172a] rounded-xl border border-[#1e2340]">
+                      <p className="text-[#8890b5]">No modules found for this category.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
