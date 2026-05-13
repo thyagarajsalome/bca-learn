@@ -171,6 +171,14 @@ function ModulesManagement() {
     setLoading(true);
 
     try {
+      // 1. Automatically calculate the next sequence number
+      const currentMaxOrder = modules.reduce((max, module) => {
+        return Math.max(max, module.order_index || 0);
+      }, 0);
+      
+      const nextSequenceNumber = currentMaxOrder + 1;
+
+      // 2. Insert with the automated number
       const { error } = await supabase
         .from('modules')
         .insert({
@@ -179,7 +187,7 @@ function ModulesManagement() {
           icon: formData.icon,
           color: formData.color,
           semester: formData.semester,
-          order_index: formData.order_index,
+          order_index: nextSequenceNumber, // Applied automatically here
           is_published: formData.is_published,
         })
         .select()
@@ -217,7 +225,7 @@ function ModulesManagement() {
     });
   };
 
-const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
+  const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
     e.preventDefault();
     setLoading(true);
 
@@ -230,7 +238,7 @@ const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
           icon: editFormData.icon,
           color: editFormData.color,
           semester: editFormData.semester,
-          order_index: editFormData.order_index,
+          order_index: editFormData.order_index, // Keeps original order
           is_published: editFormData.is_published,
         })
         .eq('id', moduleId);
@@ -242,13 +250,9 @@ const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
       setEditingModuleId(null);
       loadModules();
 
-    } catch (err: any) {
-      // 🚨 UPDATED CATCH BLOCK to show the EXACT error reason 🚨
-      console.error("Full Error Details:", err);
-      addNotification({ 
-        type: 'error', 
-        message: err.message || err.details || 'Failed to update module' 
-      });
+    } catch (err) {
+      console.error("Update Module Error:", err);
+      addNotification({ type: 'error', message: 'Failed to update module' });
     } finally {
       setLoading(false);
     }
@@ -330,7 +334,7 @@ const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Icon (Emoji)</label>
                 <input
@@ -351,9 +355,7 @@ const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
                   className="w-full h-12 px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Semester</label>
                 <select
@@ -365,16 +367,6 @@ const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
                     <option key={sem} value={sem}>Semester {sem}</option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[#e8eaf6] mb-2">Order</label>
-                <input
-                  type="number"
-                  value={formData.order_index}
-                  onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 1 })}
-                  className="w-full px-4 py-3 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                />
               </div>
             </div>
 
@@ -445,7 +437,7 @@ const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <input
                         type="text"
@@ -476,16 +468,6 @@ const handleUpdateModule = async (e: React.FormEvent, moduleId: string) => {
                           <option key={sem} value={sem}>Sem {sem}</option>
                         ))}
                       </select>
-                    </div>
-                    <div>
-                      <input
-                        type="number"
-                        value={editFormData.order_index}
-                        onChange={(e) => setEditFormData({ ...editFormData, order_index: parseInt(e.target.value) || 1 })}
-                        className="w-full px-4 py-2 bg-[#0c0f1a] border border-[#1e2340] rounded-lg text-[#e8eaf6] focus:outline-none focus:ring-2 focus:ring-[#5b6af0]"
-                        placeholder="Order"
-                        title="Order Index"
-                      />
                     </div>
                   </div>
 
