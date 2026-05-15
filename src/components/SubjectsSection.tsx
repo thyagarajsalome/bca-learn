@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Course } from '../types';
-import { COURSES, SEMESTERS } from '../data';
+import { COURSES } from '../data';
 
 const BADGE_STYLES = {
   blue:  'bg-accent/15 text-accent2',

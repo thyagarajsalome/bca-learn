@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, PlayCircle, FileText, CheckCircle2, ChevronDown, MessageSquare, Download, Share2 } from 'lucide-react';
+import { ArrowLeft, PlayCircle, FileText, CheckCircle2, ChevronDown, MessageSquare, Download, Share2, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { supabase } from '../lib/supabase';
 import { COURSES, FUTURE_TOPICS } from '../data';
 
 export default function LessonPlayer() {
@@ -12,6 +15,25 @@ export default function LessonPlayer() {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [openModules, setOpenModules] = useState<number[]>([Number(moduleIdx) || 0]);
+  const [dbLesson, setDbLesson] = useState<any>(null);
+  const [loadingLesson, setLoadingLesson] = useState(true);
+
+  useEffect(() => {
+    async function fetchLesson() {
+      setLoadingLesson(true);
+      const { data } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('course_id', id)
+        .eq('module_idx', parseInt(moduleIdx || '0'))
+        .eq('lesson_idx', parseInt(lessonIdx || '0'))
+        .single();
+      
+      setDbLesson(data);
+      setLoadingLesson(false);
+    }
+    if (id) fetchLesson();
+  }, [id, moduleIdx, lessonIdx]);
 
   if (!course) {
     return <div className="p-20 text-center text-white">Course not found.</div>;
@@ -94,14 +116,27 @@ export default function LessonPlayer() {
             <div className="text-muted text-sm leading-relaxed min-h-[300px]">
               {activeTab === 'overview' && (
                 <div className="animate-fade-up">
-                  <p className="mb-4">In this lesson, we will cover the foundational aspects of {course.topics[Number(moduleIdx)]}. You'll learn the key concepts, see practical examples, and understand how it applies to real-world scenarios.</p>
-                  <h4 className="text-white font-bold mb-2">Learning Objectives:</h4>
-                  <ul className="list-disc pl-5 space-y-1 mb-6">
-                    <li>Understand the core principles.</li>
-                    <li>Apply basic techniques to solve problems.</li>
-                    <li>Recognize common pitfalls and best practices.</li>
-                  </ul>
-                  <div className="flex gap-3">
+                  {loadingLesson ? (
+                    <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin" /></div>
+                  ) : dbLesson?.content ? (
+                    <div className="prose prose-invert prose-accent max-w-none mb-8">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {dbLesson.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="mb-4">In this lesson, we will cover the foundational aspects of {course.topics[Number(moduleIdx)]}. You'll learn the key concepts, see practical examples, and understand how it applies to real-world scenarios.</p>
+                      <h4 className="text-white font-bold mb-2">Learning Objectives:</h4>
+                      <ul className="list-disc pl-5 space-y-1 mb-6">
+                        <li>Understand the core principles.</li>
+                        <li>Apply basic techniques to solve problems.</li>
+                        <li>Recognize common pitfalls and best practices.</li>
+                      </ul>
+                    </>
+                  )}
+                  
+                  <div className="flex gap-3 pt-6 border-t border-border mt-8">
                     <button className="flex items-center gap-2 bg-surface2 px-4 py-2 rounded-lg text-white hover:bg-surface border border-border">
                       <Share2 size={16} /> Share
                     </button>
@@ -117,8 +152,20 @@ export default function LessonPlayer() {
                     <h4 className="text-white font-bold flex items-center gap-2"><FileText size={18}/> Official Study Notes</h4>
                     <button className="text-accent2 hover:underline flex items-center gap-1 text-xs"><Download size={14}/> Download PDF</button>
                   </div>
-                  <p className="font-mono text-xs opacity-70 mb-4">// Notes placeholder for {course.topics[Number(moduleIdx)]}</p>
-                  <p>1. Always start with the definition.<br/>2. Look at the properties.<br/>3. Memorize the syntax.</p>
+                  {loadingLesson ? (
+                    <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin" /></div>
+                  ) : dbLesson?.content ? (
+                    <div className="prose prose-invert prose-accent max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {dbLesson.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="font-mono text-xs opacity-70 mb-4">// Notes placeholder for {course.topics[Number(moduleIdx)]}</p>
+                      <p>1. Always start with the definition.<br/>2. Look at the properties.<br/>3. Memorize the syntax.</p>
+                    </>
+                  )}
                 </div>
               )}
               {activeTab === 'q&a' && (

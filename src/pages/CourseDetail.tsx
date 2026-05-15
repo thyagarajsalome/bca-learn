@@ -3,6 +3,7 @@ import { COURSES, FUTURE_TOPICS } from '../data';
 import { ArrowLeft, PlayCircle, FileText, CheckCircle2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import type { Course } from '../types';
 
 export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
   const { id } = useParams();
@@ -112,7 +113,7 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
                 {!isFuture && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted">Semesters:</span>
-                    <span className="font-semibold">{(item as Course).sem.map(s => s.replace('sem','Sem ')).join(', ')}</span>
+                    <span className="font-semibold">{(item as Course).sem.map((s: string) => s.replace('sem','Sem ')).join(', ')}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-sm">
