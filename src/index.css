@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: #080c18; color: #e8eaf6; font-family: 'Inter', sans-serif; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #080c18; }
+  ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 3px; }
+}
+
+@layer utilities {
+  .gradient-text {
+    background: linear-gradient(135deg, #6366f1, #a78bfa, #38bdf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .glass {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .card-hover {
+    transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  }
+  .card-hover:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 48px rgba(0,0,0,0.5);
+  }
+}
+
+/* Floating animation for hero cards */
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes particleFloat {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0.4; }
+  50%  { opacity: 0.8; }
+  100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+.animate-fade-up { animation: fadeUp 0.6s ease both; }
+.animate-float-1 { animation: floatCard 4s ease-in-out infinite; }
+.animate-float-2 { animation: floatCard 4s ease-in-out 0.8s infinite; }
+.animate-float-3 { animation: floatCard 4s ease-in-out 1.6s infinite; }
+.animate-float-4 { animation: floatCard 4s ease-in-out 2.4s infinite; }
+
+/* Progress bar fill animation */
+.progress-fill {
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* Modal animation */
+@keyframes modalIn {
+  from { transform: scale(0.96) translateY(16px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+.modal-animate { animation: modalIn 0.25s ease both; }
+
+/* Future Learning top border effect */
+.fl-card-border::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #6366f1, #a78bfa, #38bdf8);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.fl-card-border:hover::after { opacity: 1; }
