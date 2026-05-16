@@ -47,7 +47,7 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
   const progress = item.progress || 0;
 
   return (
-    <div className="bg-bg text-white min-h-screen flex flex-col">
+    <div className="bg-bg min-h-screen flex flex-col">
       <Navbar onSearchOpen={() => {}} />
 
       <main className="flex-1 pt-28 pb-20 px-6 max-w-7xl mx-auto w-full">

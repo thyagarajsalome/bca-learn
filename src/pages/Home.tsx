@@ -39,7 +39,10 @@ export default function Home() {
   }
 
   return (
-    <div className="bg-bg text-white min-h-screen">
+    <div className="bg-bg text-text min-h-screen"> 
+{/* Or just remove text-white, as body sets the color */}
+<div className="bg-bg min-h-screen"></div>
+
       <Navbar onSearchOpen={() => setSearchOpen(true)} />
       <main>
         <Hero />
