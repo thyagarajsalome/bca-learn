@@ -14,7 +14,12 @@ export default function SearchOverlay({ open, onClose, onOpenCourse, onOpenFutur
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open) { setQuery(''); setTimeout(() => inputRef.current?.focus(), 50); }
+    if (open) { 
+      setTimeout(() => {
+        setQuery('');
+        inputRef.current?.focus();
+      }, 50); 
+    }
   }, [open]);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { COURSES, FUTURE_TOPICS } from '../data';
-import { ArrowLeft, PlayCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import type { Course } from '../types';
@@ -22,7 +22,7 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
   }
 
   const isFuture = type === 'future';
-  const accentColor = isFuture ? (item as any).color : '#6366f1';
+  const accentColor = isFuture ? (item as { color: string }).color : '#6366f1';
 
   return (
     <div className="bg-bg text-white min-h-screen flex flex-col">
@@ -72,10 +72,7 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
                     {/* Mock lessons inside module */}
                     <div className="mt-4 pt-4 border-t border-border flex flex-col gap-2">
                       <Link to={`/lesson/${type}/${id}/${idx}/0`} className="flex items-center gap-3 text-sm text-muted hover:text-accent2 transition-colors">
-                        <PlayCircle size={16} className="text-accent2" /> Video Lecture (15m)
-                      </Link>
-                      <Link to={`/lesson/${type}/${id}/${idx}/1`} className="flex items-center gap-3 text-sm text-muted hover:text-blue-400 transition-colors">
-                        <FileText size={16} className="text-blue-400" /> Study Notes
+                        <FileText size={16} className="text-accent2" /> Read Lesson Content
                       </Link>
                     </div>
                   </div>

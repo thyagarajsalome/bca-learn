@@ -30,8 +30,8 @@ export default function AuthModal() {
         if (error) throw error;
         setSuccess('Check your email for the confirmation link!');
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      setError((err as Error).message || 'An error occurred');
     } finally {
       setLoading(false);
     }

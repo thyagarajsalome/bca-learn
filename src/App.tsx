@@ -6,13 +6,16 @@ import LessonPlayer from './pages/LessonPlayer';
 import AdminDashboard from './pages/AdminDashboard';
 import AuthModal from './components/AuthModal';
 import { useAuthStore } from './store/auth';
+import { useUIStore } from './store/ui';
 
 export default function App() {
   const checkUser = useAuthStore(state => state.checkUser);
+  const initTheme = useUIStore(state => state.initTheme);
 
   useEffect(() => {
     checkUser();
-  }, [checkUser]);
+    initTheme();
+  }, [checkUser, initTheme]);
 
   return (
     <BrowserRouter>

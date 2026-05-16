@@ -87,7 +87,6 @@ create table lessons (
   lesson_idx integer not null,
   title text not null,
   content text, -- Markdown content goes here
-  video_url text, -- Future use
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   unique(course_id, module_idx, lesson_idx)
 );

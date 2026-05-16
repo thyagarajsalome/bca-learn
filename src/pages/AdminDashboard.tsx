@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/auth';
 import { COURSES, FUTURE_TOPICS } from '../data';
-import { Lock, Save, FileText, Loader2, Link as LinkIcon, Trash2 } from 'lucide-react';
+import { Lock, Save, FileText, Loader2, Trash2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -16,7 +16,6 @@ export default function AdminDashboard() {
   const [lessonIdx, setLessonIdx] = useState('0');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
   
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -57,11 +56,9 @@ export default function AdminDashboard() {
       if (data) {
         setTitle(data.title);
         setContent(data.content || '');
-        setVideoUrl(data.video_url || '');
       } else {
         setTitle('');
         setContent('');
-        setVideoUrl('');
       }
     }
     fetchLesson();
@@ -83,9 +80,8 @@ export default function AdminDashboard() {
       setMessage('Lesson deleted successfully!');
       setTitle('');
       setContent('');
-      setVideoUrl('');
-    } catch (err: any) {
-      setMessage(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      setMessage(`Error: ${(err as Error).message}`);
     } finally {
       setDeleting(false);
     }
@@ -110,7 +106,7 @@ export default function AdminDashboard() {
       if (existing) {
         const res = await supabase
           .from('lessons')
-          .update({ title, content, video_url: videoUrl })
+          .update({ title, content })
           .eq('id', existing.id);
         error = res.error;
       } else {
@@ -121,16 +117,15 @@ export default function AdminDashboard() {
             module_idx: parseInt(moduleIdx),
             lesson_idx: parseInt(lessonIdx),
             title,
-            content,
-            video_url: videoUrl
+            content
           });
         error = res.error;
       }
 
       if (error) throw error;
       setMessage('Lesson saved successfully!');
-    } catch (err: any) {
-      setMessage(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      setMessage(`Error: ${(err as Error).message}`);
     } finally {
       setSaving(false);
     }
@@ -205,16 +200,7 @@ export default function AdminDashboard() {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-muted uppercase mb-2">Video URL (Optional YouTube / MP4 Link)</label>
-            <div className="relative">
-              <LinkIcon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
-              <input 
-                type="url" value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://youtube.com/..."
-                className="w-full bg-surface2 border border-border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-accent2"
-              />
-            </div>
-          </div>
+
 
           <div>
             <label className="block text-xs font-semibold text-muted uppercase mb-2">Markdown Content (Notes & Text)</label>

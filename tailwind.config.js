@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
@@ -8,14 +9,14 @@ export default {
         display: ['Space Grotesk', 'sans-serif'],
       },
       colors: {
-        bg:       '#080c18',
-        surface:  '#0f1526',
-        surface2: '#161d35',
-        border:   '#1e2a4a',
-        accent:   '#6366f1',
-        accent2:  '#818cf8',
-        muted:    '#8890b5',
-        subtle:   '#4a5280',
+        bg:       'var(--color-bg)',
+        surface:  'var(--color-surface)',
+        surface2: 'var(--color-surface2)',
+        border:   'var(--color-border)',
+        accent:   'var(--color-accent)',
+        accent2:  'var(--color-accent2)',
+        muted:    'var(--color-muted)',
+        subtle:   'var(--color-subtle)',
       },
     },
   },

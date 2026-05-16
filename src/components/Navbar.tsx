@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Menu, X, BookOpen, User as UserIcon } from 'lucide-react';
+import { Search, Menu, X, BookOpen, User as UserIcon, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/ui';
 import { useAuthStore } from '../store/auth';
@@ -11,7 +11,7 @@ interface NavbarProps {
 export default function Navbar({ onSearchOpen }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const setAuthModalOpen = useUIStore(s => s.setAuthModalOpen);
+  const { setAuthModalOpen, theme, toggleTheme } = useUIStore();
   const { user, role, signOut } = useAuthStore();
 
   useEffect(() => {
@@ -49,6 +49,10 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
+          <button onClick={toggleTheme} aria-label="Toggle Theme"
+            className="p-2 rounded-lg text-muted hover:text-white hover:bg-surface2 transition-all flex items-center justify-center">
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
           <button onClick={onSearchOpen} aria-label="Search"
             className="p-2 rounded-lg text-muted hover:text-white hover:bg-surface2 transition-all">
             <Search size={18} />
