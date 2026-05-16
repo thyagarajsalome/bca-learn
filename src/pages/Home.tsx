@@ -7,8 +7,7 @@ import SemestersSection from '../components/SemestersSection';
 import Modal from '../components/Modal';
 import SearchOverlay from '../components/SearchOverlay';
 import Footer from '../components/Footer';
-import { POPULAR_TOPICS } from '../constants'; // <-- New import
-import { useCourseStore } from '../store/courses'; // <-- New import
+import { useCourseStore } from '../store/courses'; 
 import type { Course, FutureTopic } from '../types';
 import { BookOpen, Loader2 } from 'lucide-react';
 
@@ -39,41 +38,41 @@ export default function Home() {
   }
 
   return (
-    <div className="bg-bg text-text min-h-screen"> 
-{/* Or just remove text-white, as body sets the color */}
-<div className="bg-bg min-h-screen"></div>
-
+    <div className="bg-bg min-h-screen flex flex-col"> 
       <Navbar onSearchOpen={() => setSearchOpen(true)} />
-      <main>
+      <main className="flex-1">
         <Hero />
         <SubjectsSection onOpenCourse={openCourse} />
         <FutureSection onOpen={openFuture} />
         <SemestersSection onOpenCourse={openCourse} />
 
-        {/* Popular Topics */}
-        <section id="topics" className="py-24 bg-surface">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-14">
-              <span className="inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
-                🔥 Popular
-              </span>
-              <h2 className="font-display font-bold text-4xl mb-3">Most Searched Topics</h2>
-            </div>
-            <div className="flex flex-wrap gap-3 justify-center">
-              {POPULAR_TOPICS.map(t => (
-                <button key={t.text}
-                  onClick={() => t.type === 'future' ? openFuture(t.id) : openCourse(t.id)}
-                  className="flex items-center gap-3 bg-surface2 border border-border hover:border-accent2 hover:bg-accent/5 rounded-2xl px-5 py-3 transition-all group">
-                  <span className="text-lg">{t.icon}</span>
-                  <span className="text-sm font-medium group-hover:text-accent2 transition-colors">{t.text}</span>
-                  <span className="text-xs text-muted ml-1">{t.count}</span>
-                </button>
-              ))}
+        {/* About */}
+        <section id="about" className="py-24">
+          <div className="max-w-7xl mx-auto px-6 text-center">
+            <div className="max-w-2xl mx-auto">
+              <BookOpen className="mx-auto mb-5 text-accent2" size={40} />
+              <h2 className="font-display font-bold text-4xl mb-5">
+                Built for <span className="gradient-text">BCA Students</span>
+              </h2>
+              <p className="text-muted text-lg leading-relaxed mb-8">
+                BCA Learn is a free digital library covering the complete IGNOU BCA curriculum — all 27 official courses across 4 semesters — plus 7 career-ready Future Learning tracks to prepare you for the real tech world.
+              </p>
+              <div className="grid grid-cols-3 gap-6">
+                {[
+                  { emoji:'🎓', label:'27 Courses', desc:'Official BCA syllabus' },
+                  { emoji:'🚀', label:'7 Topics',   desc:'Future learning track' },
+                  { emoji:'💡', label:'100% Free',  desc:'Always free forever' },
+                ].map(item => (
+                  <div key={item.label} className="bg-surface border border-border rounded-2xl p-5">
+                    <span className="text-3xl mb-2 block">{item.emoji}</span>
+                    <p className="font-display font-bold text-lg">{item.label}</p>
+                    <p className="text-muted text-xs mt-1">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
-
-        {/* About Section stays the same... */}
       </main>
       <Footer />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} onOpenCourse={openCourse} onOpenFuture={openFuture} />
