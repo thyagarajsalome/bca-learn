@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import type { Course } from '../types';
-import { COURSES } from '../data';
+import { useCourseStore } from '../store/courses'; // <-- Importing from your new store
 
-const BADGE_STYLES = {
+// Added a Record type here so TypeScript doesn't complain about dynamic DB strings
+const BADGE_STYLES: Record<string, string> = {
   blue:  'bg-accent/15 text-accent2',
   green: 'bg-green-500/15 text-green-400',
   gold:  'bg-yellow-500/15 text-yellow-400',
@@ -17,8 +18,12 @@ interface SubjectsSectionProps {
 
 export default function SubjectsSection({ onOpenCourse }: SubjectsSectionProps) {
   const [active, setActive] = useState('all');
+  
+  // Pull the dynamic courses from Supabase via Zustand
+  const { courses } = useCourseStore();
 
-  const visible = COURSES.filter(c => active === 'all' || c.sem.includes(active));
+  // Filter based on the dynamic courses array
+  const visible = courses.filter(c => active === 'all' || (c.sem && c.sem.includes(active)));
 
   return (
     <section id="subjects" className="py-24">
@@ -29,7 +34,7 @@ export default function SubjectsSection({ onOpenCourse }: SubjectsSectionProps) 
             📖 Core Subjects
           </span>
           <h2 className="font-display font-bold text-4xl mb-3">BCA Subject Library</h2>
-          <p className="text-muted max-w-lg mx-auto">All 27 official IGNOU BCA courses, organized by semester. Click any course to explore topics and lessons.</p>
+          <p className="text-muted max-w-lg mx-auto">All official IGNOU BCA courses, organized by semester. Click any course to explore topics and lessons.</p>
         </div>
 
         {/* Filter Bar */}
@@ -55,7 +60,7 @@ export default function SubjectsSection({ onOpenCourse }: SubjectsSectionProps) 
         </div>
 
         {visible.length === 0 && (
-          <p className="text-center text-muted py-16">No courses found.</p>
+          <p className="text-center text-muted py-16">No courses found. Add some in the Admin Dashboard!</p>
         )}
       </div>
     </section>
@@ -63,6 +68,10 @@ export default function SubjectsSection({ onOpenCourse }: SubjectsSectionProps) 
 }
 
 function CourseCard({ course, onClick }: { course: Course; onClick: () => void }) {
+  // Safety fallbacks in case DB data is empty
+  const semLabel = course.sem && course.sem.length > 0 ? course.sem[0].replace('sem','Sem ') : 'Sem ?';
+  const badgeStyle = BADGE_STYLES[course.badge] || BADGE_STYLES['blue'];
+
   return (
     <article
       onClick={onClick}
@@ -73,10 +82,10 @@ function CourseCard({ course, onClick }: { course: Course; onClick: () => void }
       <div className="absolute inset-0 bg-gradient-to-br from-transparent to-accent/5 pointer-events-none" />
 
       <div className="flex items-start justify-between mb-5">
-        <span className="text-4xl leading-none">{course.emoji}</span>
+        <span className="text-4xl leading-none">{course.emoji || '📚'}</span>
         <div className="flex flex-col items-end gap-1">
-          <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${BADGE_STYLES[course.badge]}`}>
-            {course.sem[0].replace('sem','Sem ')}
+          <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${badgeStyle}`}>
+            {semLabel}
           </span>
           {course.isLab && (
             <span className="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full">Lab</span>
@@ -90,7 +99,7 @@ function CourseCard({ course, onClick }: { course: Course; onClick: () => void }
 
       <div className="flex items-center justify-between mb-3">
         <div className="flex gap-1.5 flex-wrap">
-          {course.tags.slice(0, 2).map(t => (
+          {course.tags && course.tags.slice(0, 2).map(t => (
             <span key={t} className="text-[10px] px-2 py-0.5 bg-surface2 text-muted rounded">{t}</span>
           ))}
         </div>
@@ -100,11 +109,11 @@ function CourseCard({ course, onClick }: { course: Course; onClick: () => void }
       {/* Progress */}
       <div>
         <div className="h-1 bg-surface2 rounded-full overflow-hidden">
-          <div className="progress-fill" style={{ width: `${course.progress}%` }} />
+          <div className="progress-fill" style={{ width: `${course.progress || 0}%` }} />
         </div>
         <div className="flex justify-between text-[10px] text-muted mt-1.5">
-          <span>{course.lessons} lessons</span>
-          <span>{course.progress}% done</span>
+          <span>{course.topics?.length || 0} modules</span>
+          <span>{course.progress || 0}% done</span>
         </div>
       </div>
     </article>

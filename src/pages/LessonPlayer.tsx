@@ -4,14 +4,24 @@ import { ArrowLeft, FileText, CheckCircle2, ChevronDown, Loader2 } from 'lucide-
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { supabase } from '../lib/supabase';
-import { COURSES, FUTURE_TOPICS } from '../data';
+import { useCourseStore } from '../store/courses'; // <-- Import the new store
 
 export default function LessonPlayer() {
   const { track, id, moduleIdx, lessonIdx } = useParams();
   
+  // Pull live data from Supabase via Zustand
+  const { courses, futureTopics, fetchCourses, loading } = useCourseStore();
+
+  // If a user navigates here directly via URL, fetch courses if they aren't loaded
+  useEffect(() => {
+    if (courses.length === 0 && futureTopics.length === 0) {
+      fetchCourses();
+    }
+  }, [courses.length, futureTopics.length, fetchCourses]);
+
   const course = track === 'future' 
-    ? FUTURE_TOPICS.find(f => f.id === id)
-    : COURSES.find(c => c.id === id);
+    ? futureTopics.find(f => f.id === id)
+    : courses.find(c => c.id === id);
 
   const [openModules, setOpenModules] = useState<number[]>([Number(moduleIdx) || 0]);
   const [dbLesson, setDbLesson] = useState<{ content?: string; title?: string } | null>(null);
@@ -34,15 +44,32 @@ export default function LessonPlayer() {
     if (id) fetchLesson();
   }, [id, moduleIdx, lessonIdx]);
 
+  if (loading) {
+    return (
+      <div className="bg-bg text-white min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-accent2" size={40} />
+      </div>
+    );
+  }
+
   if (!course) {
-    return <div className="p-20 text-center text-white">Course not found.</div>;
+    return (
+      <div className="bg-bg text-white min-h-screen flex flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold mb-4">Course not found</h1>
+        <Link to="/" className="text-accent2 hover:underline">← Back to Home</Link>
+      </div>
+    );
   }
 
   const toggleModule = (idx: number) => {
     setOpenModules(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
   };
 
-  const accentColor = track === 'future' ? (course as { color: string }).color : '#6366f1';
+  const accentColor = track === 'future' ? '#10b981' : '#6366f1';
+  
+  // Safety fallbacks for database arrays
+  const topics = course.topics || [];
+  const progress = course.progress || 0;
 
   return (
     <div className="bg-bg text-white min-h-screen flex flex-col overflow-hidden h-screen">
@@ -60,7 +87,7 @@ export default function LessonPlayer() {
         <div className="flex items-center gap-3">
           <div className="text-xs text-muted font-medium bg-surface2 px-3 py-1.5 rounded-full flex items-center gap-2">
             <span className="w-2 h-2 rounded-full" style={{ background: accentColor }} />
-            {course.progress}% Completed
+            {progress}% Completed
           </div>
         </div>
       </nav>
@@ -72,7 +99,7 @@ export default function LessonPlayer() {
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="p-8 md:p-12 max-w-5xl mx-auto w-full">
             <h2 className="font-display font-bold text-3xl md:text-4xl mb-8 pb-6 border-b border-border">
-              Module {Number(moduleIdx) + 1}: {course.topics[Number(moduleIdx)] || 'Introduction'}
+              Module {Number(moduleIdx) + 1}: {topics[Number(moduleIdx)] || 'Introduction'}
             </h2>
             
             <div className="animate-fade-up">
@@ -102,11 +129,14 @@ export default function LessonPlayer() {
         <div className="w-80 lg:w-96 bg-surface border-l border-border flex flex-col shrink-0 overflow-hidden">
           <div className="p-4 border-b border-border bg-surface flex items-center justify-between shrink-0">
             <h3 className="font-bold text-sm">Course Content</h3>
-            <span className="text-xs text-muted">1 / {course.topics.length}</span>
+            <span className="text-xs text-muted">1 / {topics.length || 0}</span>
           </div>
           
           <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {course.topics.map((topic, mIdx) => {
+            {topics.length === 0 && (
+              <p className="text-muted text-sm text-center p-6">No modules available.</p>
+            )}
+            {topics.map((topic, mIdx) => {
               const isOpen = openModules.includes(mIdx);
               const isActiveModule = mIdx === Number(moduleIdx);
               
@@ -152,4 +182,3 @@ export default function LessonPlayer() {
     </div>
   );
 }
-

@@ -1,16 +1,32 @@
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { COURSES, FUTURE_TOPICS } from '../data';
-import { ArrowLeft, FileText, CheckCircle2 } from 'lucide-react';
+import { useCourseStore } from '../store/courses'; // <-- Import the new store
+import { ArrowLeft, FileText, CheckCircle2, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import type { Course } from '../types';
 
 export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
   const { id } = useParams();
+  const { courses, futureTopics, fetchCourses, loading } = useCourseStore();
+
+  // If a user navigates here directly via URL, we need to fetch courses if they aren't loaded
+  useEffect(() => {
+    if (courses.length === 0 && futureTopics.length === 0) {
+      fetchCourses();
+    }
+  }, [courses.length, futureTopics.length, fetchCourses]);
+
+  if (loading) {
+    return (
+      <div className="bg-bg text-white min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-accent2" size={40} />
+      </div>
+    );
+  }
 
   const item = type === 'bca' 
-    ? COURSES.find(c => c.id === id)
-    : FUTURE_TOPICS.find(f => f.id === id);
+    ? courses.find(c => c.id === id)
+    : futureTopics.find(f => f.id === id);
 
   if (!item) {
     return (
@@ -22,11 +38,16 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
   }
 
   const isFuture = type === 'future';
-  const accentColor = isFuture ? (item as { color: string }).color : '#6366f1';
+  const accentColor = isFuture ? '#10b981' : '#6366f1'; 
+  
+  // Safety fallbacks for database arrays
+  const topics = item.topics || [];
+  const tags = item.tags || [];
+  const sem = item.sem || [];
+  const progress = item.progress || 0;
 
   return (
     <div className="bg-bg text-white min-h-screen flex flex-col">
-      {/* We pass empty onSearchOpen for now, or you can implement search on this page too */}
       <Navbar onSearchOpen={() => {}} />
 
       <main className="flex-1 pt-28 pb-20 px-6 max-w-7xl mx-auto w-full">
@@ -42,7 +63,7 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
           {/* Main Content Area */}
           <div className="lg:col-span-2">
             <div className="mb-10">
-              <span className="text-6xl block mb-6">{item.emoji}</span>
+              <span className="text-6xl block mb-6">{item.emoji || '📚'}</span>
               <h1 className="font-display font-extrabold text-4xl md:text-5xl mb-4">{item.title}</h1>
               <p className="text-muted text-lg leading-relaxed">{item.desc}</p>
             </div>
@@ -52,14 +73,17 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
                 <span className="text-accent2">📚</span> Course Modules
               </h2>
               <div className="flex flex-col gap-4">
-                {item.topics.map((topic, idx) => (
+                {topics.length === 0 && (
+                  <p className="text-muted">No modules have been added to this course yet.</p>
+                )}
+                {topics.map((topic, idx) => (
                   <div key={idx} className="bg-surface border border-border rounded-2xl p-5 hover:border-accent2 transition-all cursor-pointer group">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg mb-2 group-hover:text-accent2 transition-colors">
                           {idx + 1}. {topic}
                         </h3>
-                        <p className="text-sm text-muted">Includes 3 lessons • 45 mins</p>
+                        <p className="text-sm text-muted">Reading Materials</p>
                       </div>
                       {/* Fake completion circle */}
                       {idx === 0 ? (
@@ -69,7 +93,7 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
                       )}
                     </div>
                     
-                    {/* Mock lessons inside module */}
+                    {/* Link to actual lesson index 0 of this module */}
                     <div className="mt-4 pt-4 border-t border-border flex flex-col gap-2">
                       <Link to={`/lesson/${type}/${id}/${idx}/0`} className="flex items-center gap-3 text-sm text-muted hover:text-accent2 transition-colors">
                         <FileText size={16} className="text-accent2" /> Read Lesson Content
@@ -86,20 +110,20 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
             <div className="bg-surface border border-border rounded-2xl p-6 sticky top-28">
               <div className="mb-6">
                 <div className="h-2 bg-surface2 rounded-full overflow-hidden mb-2">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${item.progress}%`, background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)` }} />
+                  <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)` }} />
                 </div>
                 <div className="flex justify-between text-xs text-muted">
-                  <span>{item.progress}% Completed</span>
-                  <span>{item.lessons} Total Lessons</span>
+                  <span>{progress}% Completed</span>
+                  <span>{topics.length} Modules</span>
                 </div>
               </div>
 
               <Link 
                 to={`/lesson/${type}/${id}/0/0`}
-                className="flex items-center justify-center w-full py-4 rounded-xl text-white font-bold mb-6 transition-all hover:-translate-y-0.5"
+                className={`flex items-center justify-center w-full py-4 rounded-xl text-white font-bold mb-6 transition-all hover:-translate-y-0.5 ${topics.length === 0 ? 'opacity-50 pointer-events-none' : ''}`}
                 style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}bb)`, boxShadow: `0 4px 20px ${accentColor}44` }}
               >
-                {item.progress > 0 ? 'Continue Learning' : 'Start Course'}
+                {progress > 0 ? 'Continue Learning' : 'Start Course'}
               </Link>
 
               <div className="space-y-4">
@@ -107,10 +131,10 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
                   <span className="text-muted">Track:</span>
                   <span className="font-semibold">{isFuture ? 'Future Learning' : 'BCA Curriculum'}</span>
                 </div>
-                {!isFuture && (
+                {!isFuture && sem.length > 0 && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted">Semesters:</span>
-                    <span className="font-semibold">{(item as Course).sem.map((s: string) => s.replace('sem','Sem ')).join(', ')}</span>
+                    <span className="font-semibold">{sem.map(s => s.replace('sem','Sem ')).join(', ')}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-sm">
@@ -119,14 +143,16 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-border">
-                <p className="text-sm font-semibold mb-3">Tags</p>
-                <div className="flex gap-2 flex-wrap">
-                  {item.tags.map(tag => (
-                    <span key={tag} className="text-[10px] px-2 py-1 bg-surface2 text-muted rounded uppercase tracking-wider">{tag}</span>
-                  ))}
+              {tags.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-border">
+                  <p className="text-sm font-semibold mb-3">Tags</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {tags.map(tag => (
+                      <span key={tag} className="text-[10px] px-2 py-1 bg-surface2 text-muted rounded uppercase tracking-wider">{tag}</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

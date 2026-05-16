@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
-import { COURSES, FUTURE_TOPICS } from '../data';
+import { useCourseStore } from '../store/courses'; // <-- Import the new store
 
 interface SearchOverlayProps {
   open: boolean;
@@ -12,6 +12,9 @@ interface SearchOverlayProps {
 export default function SearchOverlay({ open, onClose, onOpenCourse, onOpenFuture }: SearchOverlayProps) {
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Pull live data from Supabase via Zustand
+  const { courses, futureTopics } = useCourseStore();
 
   useEffect(() => {
     if (open) { 
@@ -29,11 +32,18 @@ export default function SearchOverlay({ open, onClose, onOpenCourse, onOpenFutur
   }, [onClose]);
 
   const q = query.toLowerCase().trim();
-  const bca = q ? COURSES.filter(s =>
-    s.title.toLowerCase().includes(q) || s.tags.some(t => t.toLowerCase().includes(q)) || s.topics.some(t => t.toLowerCase().includes(q))
+  
+  // Filter through dynamic courses (using ?. to prevent crashes on empty data)
+  const bca = q ? courses.filter(s =>
+    s.title.toLowerCase().includes(q) || 
+    s.tags?.some(t => t.toLowerCase().includes(q)) || 
+    s.topics?.some(t => t.toLowerCase().includes(q))
   ) : [];
-  const future = q ? FUTURE_TOPICS.filter(s =>
-    s.title.toLowerCase().includes(q) || s.tags.some(t => t.toLowerCase().includes(q)) || s.topics.some(t => t.toLowerCase().includes(q))
+  
+  const future = q ? futureTopics.filter(s =>
+    s.title.toLowerCase().includes(q) || 
+    s.tags?.some(t => t.toLowerCase().includes(q)) || 
+    s.topics?.some(t => t.toLowerCase().includes(q))
   ) : [];
 
   if (!open) return null;
@@ -64,18 +74,20 @@ export default function SearchOverlay({ open, onClose, onOpenCourse, onOpenFutur
         {q && !bca.length && !future.length && (
           <p className="text-muted text-center text-sm py-8">No results for "<strong className="text-white">{query}</strong>"</p>
         )}
+        
         {bca.map(s => (
           <button key={s.id} onClick={() => { onClose(); onOpenCourse(s.id); }}
             className="text-left bg-surface border border-border rounded-xl px-5 py-4 hover:border-accent transition-colors group">
-            <p className="font-semibold text-sm group-hover:text-accent2 transition-colors">{s.emoji} {s.title}</p>
-            <p className="text-muted text-xs mt-1">🎓 {s.sem.map(x => x.replace('sem','Semester ')).join(', ')} · {s.lessons} lessons</p>
+            <p className="font-semibold text-sm group-hover:text-accent2 transition-colors">{s.emoji || '📚'} {s.title}</p>
+            <p className="text-muted text-xs mt-1">🎓 {s.sem?.map(x => x.replace('sem','Semester ')).join(', ')} · {s.topics?.length || 0} modules</p>
           </button>
         ))}
+        
         {future.map(s => (
           <button key={s.id} onClick={() => { onClose(); onOpenFuture(s.id); }}
             className="text-left bg-surface border border-border rounded-xl px-5 py-4 hover:border-accent transition-colors group">
-            <p className="font-semibold text-sm group-hover:text-accent2 transition-colors">{s.emoji} {s.title}</p>
-            <p className="text-muted text-xs mt-1">🚀 Future Learning · {s.lessons} lessons</p>
+            <p className="font-semibold text-sm group-hover:text-accent2 transition-colors">{s.emoji || '🚀'} {s.title}</p>
+            <p className="text-muted text-xs mt-1">🚀 Future Learning · {s.topics?.length || 0} modules</p>
           </button>
         ))}
       </div>
