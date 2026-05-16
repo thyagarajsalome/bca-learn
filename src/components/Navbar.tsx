@@ -24,8 +24,7 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
     { href: '#subjects', label: 'BCA Subjects' },
     { href: '#future',   label: 'Future Learning' },
     { href: '#semesters',label: 'Semesters' },
-    { href: '#topics',   label: 'Topics' },
-    { href: '#about',    label: 'About' },
+       { href: '#about',    label: 'About' },
   ];
 
   return (
