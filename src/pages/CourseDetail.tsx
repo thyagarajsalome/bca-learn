@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useCourseStore } from '../store/courses'; // <-- Import the new store
+import { useCourseStore } from '../store/courses';
 import { ArrowLeft, FileText, CheckCircle2, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
-  const { id } = useParams();
+// Accept `id` as a prop directly from the Astro wrapper
+export default function CourseDetail({ type, id }: { type: 'bca' | 'future', id: string }) {
   const { courses, futureTopics, fetchCourses, loading } = useCourseStore();
 
   // If a user navigates here directly via URL, we need to fetch courses if they aren't loaded
@@ -32,7 +31,7 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
     return (
       <div className="bg-bg text-white min-h-screen flex flex-col items-center justify-center">
         <h1 className="text-4xl font-display font-bold mb-4">Course not found</h1>
-        <Link to="/" className="text-accent2 hover:underline">← Back to Home</Link>
+        <a href="/" className="text-accent2 hover:underline">← Back to Home</a>
       </div>
     );
   }
@@ -53,9 +52,9 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
       <main className="flex-1 pt-28 pb-20 px-6 max-w-7xl mx-auto w-full">
         {/* Breadcrumb */}
         <div className="mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-muted hover:text-white transition-colors text-sm">
+          <a href="/" className="inline-flex items-center gap-2 text-muted hover:text-white transition-colors text-sm">
             <ArrowLeft size={16} /> Back to Library
-          </Link>
+          </a>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -95,9 +94,9 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
                     
                     {/* Link to actual lesson index 0 of this module */}
                     <div className="mt-4 pt-4 border-t border-border flex flex-col gap-2">
-                      <Link to={`/lesson/${type}/${id}/${idx}/0`} className="flex items-center gap-3 text-sm text-muted hover:text-accent2 transition-colors">
+                      <a href={`/lesson/${type}/${id}/${idx}/0`} className="flex items-center gap-3 text-sm text-muted hover:text-accent2 transition-colors">
                         <FileText size={16} className="text-accent2" /> Read Lesson Content
-                      </Link>
+                      </a>
                     </div>
                   </div>
                 ))}
@@ -118,13 +117,13 @@ export default function CourseDetail({ type }: { type: 'bca' | 'future' }) {
                 </div>
               </div>
 
-              <Link 
-                to={`/lesson/${type}/${id}/0/0`}
+              <a 
+                href={`/lesson/${type}/${id}/0/0`}
                 className={`flex items-center justify-center w-full py-4 rounded-xl text-white font-bold mb-6 transition-all hover:-translate-y-0.5 ${topics.length === 0 ? 'opacity-50 pointer-events-none' : ''}`}
                 style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}bb)`, boxShadow: `0 4px 20px ${accentColor}44` }}
               >
                 {progress > 0 ? 'Continue Learning' : 'Start Course'}
-              </Link>
+              </a>
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center text-sm">

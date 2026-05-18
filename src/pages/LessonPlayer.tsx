@@ -1,84 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, CheckCircle2, ChevronDown, Loader2 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { supabase } from '../lib/supabase';
-import { useCourseStore } from '../store/courses'; // <-- Import the new store
-
-export default function LessonPlayer() {
-  const { track, id, moduleIdx, lessonIdx } = useParams();
-  
-  // Pull live data from Supabase via Zustand
-  const { courses, futureTopics, fetchCourses, loading } = useCourseStore();
-
-  // If a user navigates here directly via URL, fetch courses if they aren't loaded
-  useEffect(() => {
-    if (courses.length === 0 && futureTopics.length === 0) {
-      fetchCourses();
-    }
-  }, [courses.length, futureTopics.length, fetchCourses]);
-
-  const course = track === 'future' 
-    ? futureTopics.find(f => f.id === id)
-    : courses.find(c => c.id === id);
-
-  const [openModules, setOpenModules] = useState<number[]>([Number(moduleIdx) || 0]);
-  const [dbLesson, setDbLesson] = useState<{ content?: string; title?: string } | null>(null);
-  const [loadingLesson, setLoadingLesson] = useState(true);
-
-  useEffect(() => {
-    async function fetchLesson() {
-      setLoadingLesson(true);
-      const { data } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('course_id', id)
-        .eq('module_idx', parseInt(moduleIdx || '0'))
-        .eq('lesson_idx', parseInt(lessonIdx || '0'))
-        .maybeSingle();
-      
-      setDbLesson(data);
-      setLoadingLesson(false);
-    }
-    if (id) fetchLesson();
-  }, [id, moduleIdx, lessonIdx]);
-
-  if (loading) {
-    return (
-      <div className="bg-bg text-white min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-accent2" size={40} />
-      </div>
-    );
-  }
-
-  if (!course) {
-    return (
-      <div className="bg-bg text-white min-h-screen flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-bold mb-4">Course not found</h1>
-        <Link to="/" className="text-accent2 hover:underline">← Back to Home</Link>
-      </div>
-    );
-  }
-
-  const toggleModule = (idx: number) => {
-    setOpenModules(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
-  };
-
-  const accentColor = track === 'future' ? '#10b981' : '#6366f1';
-  
-  // Safety fallbacks for database arrays
-  const topics = course.topics || [];
-  const progress = course.progress || 0;
-
-  return (
+return (
     <div className="bg-bg text-white min-h-screen flex flex-col overflow-hidden h-screen">
       {/* Top Navigation */}
       <nav className="h-16 border-b border-border bg-surface flex items-center justify-between px-6 shrink-0 z-10">
         <div className="flex items-center gap-4">
-          <Link to={`/${track === 'future' ? 'future' : 'course'}/${id}`} className="p-2 -ml-2 rounded-lg text-muted hover:text-white hover:bg-surface2 transition-all">
+          <a href={`/${track === 'future' ? 'future' : 'course'}/${id}`} className="p-2 -ml-2 rounded-lg text-muted hover:text-white hover:bg-surface2 transition-all">
             <ArrowLeft size={20} />
-          </Link>
+          </a>
           <div className="w-px h-6 bg-border" />
           <h1 className="font-display font-bold text-sm truncate max-w-md hidden md:block">
             {course.title}
@@ -157,8 +84,8 @@ export default function LessonPlayer() {
 
                   {isOpen && (
                     <div className="bg-bg py-2">
-                      <Link 
-                        to={`/lesson/${track}/${id}/${mIdx}/0`}
+                      <a 
+                        href={`/lesson/${track}/${id}/${mIdx}/0`}
                         className={`flex items-start gap-3 px-4 py-2.5 hover:bg-surface2 transition-colors group ${isActiveModule && Number(lessonIdx) === 0 ? 'bg-accent/10 border-l-2 border-accent' : 'border-l-2 border-transparent'}`}
                       >
                         <FileText size={16} className={`mt-0.5 shrink-0 ${isActiveModule && Number(lessonIdx) === 0 ? 'text-accent2' : 'text-muted group-hover:text-white'}`} />
@@ -169,7 +96,7 @@ export default function LessonPlayer() {
                           <p className="text-[10px] text-muted mt-0.5">Reading</p>
                         </div>
                         {mIdx === 0 && <CheckCircle2 size={14} className="text-green-500 ml-auto" />}
-                      </Link>
+                      </a>
                     </div>
                   )}
                 </div>

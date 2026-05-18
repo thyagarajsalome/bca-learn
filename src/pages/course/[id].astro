@@ -2,19 +2,11 @@
 import Layout from '../../layouts/Layout.astro';
 import CourseDetail from '../../pages/CourseDetail.tsx';
 
-export function getStaticPaths() {
-  // If statically generating, you'd fetch all course IDs here.
-  // For now, if using SSR, this isn't strictly necessary, but good for SSG.
-  return [
-    { params: { id: 'BCS11' } },
-    { params: { id: 'MCS11' } },
-    // etc...
-  ];
-}
-
+// In Astro SSR mode (which Supabase requires), you don't need getStaticPaths.
+// If you are keeping it static, you define them. Assuming dynamic for now:
 const { id } = Astro.params;
 ---
 
 <Layout title={`Course ${id} | BCA Learn`}>
-  <CourseDetail type="bca" client:load />
+  <CourseDetail type="bca" id={id as string} client:load />
 </Layout>
