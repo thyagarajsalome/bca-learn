@@ -1,0 +1,10 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CourseDetail from '../../views/CourseDetail.tsx';
+
+const { id } = Astro.params;
+---
+
+<Layout title={`Future Track ${id} | BCA Learn`}>
+  <CourseDetail type="future" id={id as string} client:load />
+</Layout>
