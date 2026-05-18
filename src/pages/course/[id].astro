@@ -1,9 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import CourseDetail from '../../pages/CourseDetail.tsx';
+import CourseDetail from '../../views/CourseDetail.tsx';
 
-// In Astro SSR mode (which Supabase requires), you don't need getStaticPaths.
-// If you are keeping it static, you define them. Assuming dynamic for now:
 const { id } = Astro.params;
 ---
 
