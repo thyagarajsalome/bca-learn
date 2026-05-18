@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
 import { useCourseStore } from '../store/courses'; // <-- Import the new store
 
@@ -32,19 +32,24 @@ export default function SearchOverlay({ open, onClose, onOpenCourse, onOpenFutur
   }, [onClose]);
 
   const q = query.toLowerCase().trim();
-  
-  // Filter through dynamic courses (using ?. to prevent crashes on empty data)
-  const bca = q ? courses.filter(s =>
-    s.title.toLowerCase().includes(q) || 
-    s.tags?.some(t => t.toLowerCase().includes(q)) || 
-    s.topics?.some(t => t.toLowerCase().includes(q))
-  ) : [];
-  
-  const future = q ? futureTopics.filter(s =>
-    s.title.toLowerCase().includes(q) || 
-    s.tags?.some(t => t.toLowerCase().includes(q)) || 
-    s.topics?.some(t => t.toLowerCase().includes(q))
-  ) : [];
+
+  const bca = useMemo(() => {
+    if (!q) return [];
+    return courses.filter(s =>
+      s.title.toLowerCase().includes(q) ||
+      s.tags?.some(t => t.toLowerCase().includes(q)) ||
+      s.topics?.some(t => t.toLowerCase().includes(q))
+    );
+  }, [q, courses]);
+
+  const future = useMemo(() => {
+    if (!q) return [];
+    return futureTopics.filter(s =>
+      s.title.toLowerCase().includes(q) ||
+      s.tags?.some(t => t.toLowerCase().includes(q)) ||
+      s.topics?.some(t => t.toLowerCase().includes(q))
+    );
+  }, [q, futureTopics]);
 
   if (!open) return null;
 

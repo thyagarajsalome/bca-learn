@@ -37,9 +37,9 @@ export default function FutureSection({ onOpen }: FutureSectionProps) {
 
 function FutureCard({ topic, onClick }: { topic: Course; onClick: () => void }) {
   return (
-    <article
+    <button
       onClick={onClick}
-      className="bg-surface border border-border rounded-2xl p-6 cursor-pointer card-hover hover:border-accent/50 fl-card-border relative overflow-hidden group"
+      className="w-full text-left bg-surface border border-border rounded-2xl p-6 cursor-pointer card-hover hover:border-accent/50 fl-card-border relative overflow-hidden group"
       aria-label={topic.title}
     >
       <div className="flex items-center justify-between mb-4">
@@ -68,6 +68,6 @@ function FutureCard({ topic, onClick }: { topic: Course; onClick: () => void }) 
           <span className="group-hover:text-accent2 transition-colors">Explore →</span>
         </div>
       </div>
-    </article>
+    </button>
   );
 }

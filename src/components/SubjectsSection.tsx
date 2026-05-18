@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { Course } from '../types';
 import { useCourseStore } from '../store/courses'; // <-- Importing from your new store
 
@@ -18,12 +18,12 @@ interface SubjectsSectionProps {
 
 export default function SubjectsSection({ onOpenCourse }: SubjectsSectionProps) {
   const [active, setActive] = useState('all');
-  
-  // Pull the dynamic courses from Supabase via Zustand
+
   const { courses } = useCourseStore();
 
-  // Filter based on the dynamic courses array
-  const visible = courses.filter(c => active === 'all' || (c.sem && c.sem.includes(active)));
+  const visible = useMemo(() => {
+    return courses.filter(c => active === 'all' || (c.sem && c.sem.includes(active)));
+  }, [courses, active]);
 
   return (
     <section id="subjects" className="py-24">
@@ -68,14 +68,13 @@ export default function SubjectsSection({ onOpenCourse }: SubjectsSectionProps) 
 }
 
 function CourseCard({ course, onClick }: { course: Course; onClick: () => void }) {
-  // Safety fallbacks in case DB data is empty
   const semLabel = course.sem && course.sem.length > 0 ? course.sem[0].replace('sem','Sem ') : 'Sem ?';
   const badgeStyle = BADGE_STYLES[course.badge] || BADGE_STYLES['blue'];
 
   return (
-    <article
+    <button
       onClick={onClick}
-      className="bg-surface border border-border rounded-2xl p-6 cursor-pointer card-hover hover:border-accent group relative overflow-hidden"
+      className="w-full text-left bg-surface border border-border rounded-2xl p-6 cursor-pointer card-hover hover:border-accent group relative overflow-hidden"
       aria-label={course.title}
     >
       {/* subtle bg gradient */}

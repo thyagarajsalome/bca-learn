@@ -17,6 +17,8 @@ export default function AdminDashboard() {
   const [cTitle, setCTitle] = useState('');
   const [cType, setCType] = useState('bca');
   const [cTopics, setCTopics] = useState(''); // Comma separated topics
+  const [cEmoji, setCEmoji] = useState('📚');
+  const [cDesc, setCDesc] = useState('');
   
   // Lesson Form State
   const [courseId, setCourseId] = useState('');
@@ -48,11 +50,26 @@ export default function AdminDashboard() {
         title: cTitle,
         type: cType,
         topics: topicArray,
-        emoji: '📚', // Default emoji
-        description: 'New Course'
+        emoji: cEmoji,
+        description: cDesc
       });
       if (error) throw error;
       setMessage('Course saved! You can now add lessons to it.');
+      fetchCourses();
+    } catch (err: any) {
+      setMessage(`Error: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteCourse = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this course? This will also remove all associated lessons.')) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('courses').delete().eq('id', id);
+      if (error) throw error;
+      setMessage('Course deleted successfully!');
       fetchCourses();
     } catch (err: any) {
       setMessage(`Error: ${err.message}`);
@@ -136,6 +153,20 @@ export default function AdminDashboard() {
               {saving ? <Loader2 size={18} className="animate-spin" /> : <><Plus size={18} /> Save Course Structure</>}
             </button>
           </form>
+
+          <div className="bg-surface border border-border p-6 rounded-2xl mt-8">
+            <h2 className="text-xl font-bold mb-4">Existing Courses</h2>
+            <div className="space-y-2">
+              {allCourses.map(c => (
+                <div key={c.id} className="flex items-center justify-between p-3 bg-surface2 border border-border rounded-xl">
+                  <span className="text-sm font-medium">{c.title} ({c.id})</span>
+                  <button onClick={() => handleDeleteCourse(c.id)} className="p-2 text-muted hover:text-red-400 transition-colors">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Tab 2: Lesson Editor */}
