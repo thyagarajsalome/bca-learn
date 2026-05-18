@@ -39,10 +39,10 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-1 ml-auto">
           {links.map(l => (
-            <Link key={l.href} to={`/${l.href}`}
+            <a key={l.href} href={l.href === '#about' ? '#about' : l.href}
                className="px-3 py-2 rounded-lg text-muted text-sm font-medium hover:text-white hover:bg-surface2 transition-all">
               {l.label}
-            </Link>
+            </a>
           ))}
         </div>
 
@@ -95,10 +95,10 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
       {menuOpen && (
         <div className="md:hidden bg-surface border-b border-border px-6 py-4 flex flex-col gap-2">
           {links.map(l => (
-            <Link key={l.href} to={`/${l.href}`} onClick={() => setMenuOpen(false)}
+            <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)}
                className="px-3 py-2 rounded-lg text-muted text-sm font-medium hover:text-white hover:bg-surface2 transition-all">
               {l.label}
-            </Link>
+            </a>
           ))}
           <div className="h-px bg-border my-2" />
           {user ? (
