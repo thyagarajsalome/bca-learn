@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import type { User } from '@supabase/supabase-js';
+import type { User, Subscription } from '@supabase/supabase-js';
 
 interface AuthState {
   user: User | null;
   role: string | null;
   loading: boolean;
-  _authListener: any | null;
+  _authListener: Subscription | null;
   setUser: (user: User | null) => void;
   setRole: (role: string | null) => void;
   setLoading: (loading: boolean) => void;
@@ -22,7 +22,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setUser: (user) => set({ user }),
   setRole: (role) => set({ role }),
   setLoading: (loading) => set({ loading }),
-  
+
   checkUser: async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -36,8 +36,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ user, role, loading: false });
 
-      // Use a closure or store a reference to the subscription to allow cleanup if needed
-      // but since this is a global store, we can ensure it's only called once
       if (!get()._authListener) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
           const currentUser = session?.user ?? null;

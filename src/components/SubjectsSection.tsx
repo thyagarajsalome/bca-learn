@@ -115,6 +115,6 @@ function CourseCard({ course, onClick }: { course: Course; onClick: () => void }
           <span>{course.progress || 0}% done</span>
         </div>
       </div>
-    </article>
+    </button>
   );
 }
