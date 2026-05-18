@@ -1,4 +1,78 @@
-return (
+import { useState, useEffect } from 'react';
+import { ArrowLeft, FileText, CheckCircle2, ChevronDown, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { supabase } from '../lib/supabase';
+import { useCourseStore } from '../store/courses';
+
+// Accept URL params as props from Astro
+interface Props {
+  track: string;
+  id: string;
+  moduleIdx: string;
+  lessonIdx: string;
+}
+
+export default function LessonPlayer({ track, id, moduleIdx, lessonIdx }: Props) {
+  const { courses, futureTopics, fetchCourses, loading } = useCourseStore();
+
+  useEffect(() => {
+    if (courses.length === 0 && futureTopics.length === 0) {
+      fetchCourses();
+    }
+  }, [courses.length, futureTopics.length, fetchCourses]);
+
+  const course = track === 'future' 
+    ? futureTopics.find(f => f.id === id)
+    : courses.find(c => c.id === id);
+
+  const [openModules, setOpenModules] = useState<number[]>([Number(moduleIdx) || 0]);
+  const [dbLesson, setDbLesson] = useState<{ content?: string; title?: string } | null>(null);
+  const [loadingLesson, setLoadingLesson] = useState(true);
+
+  useEffect(() => {
+    async function fetchLesson() {
+      setLoadingLesson(true);
+      const { data } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('course_id', id)
+        .eq('module_idx', parseInt(moduleIdx || '0'))
+        .eq('lesson_idx', parseInt(lessonIdx || '0'))
+        .maybeSingle();
+      
+      setDbLesson(data);
+      setLoadingLesson(false);
+    }
+    if (id) fetchLesson();
+  }, [id, moduleIdx, lessonIdx]);
+
+  if (loading) {
+    return (
+      <div className="bg-bg text-white min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-accent2" size={40} />
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="bg-bg text-white min-h-screen flex flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold mb-4">Course not found</h1>
+        <a href="/" className="text-accent2 hover:underline">← Back to Home</a>
+      </div>
+    );
+  }
+
+  const toggleModule = (idx: number) => {
+    setOpenModules(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
+  };
+
+  const accentColor = track === 'future' ? '#10b981' : '#6366f1';
+  const topics = course.topics || [];
+  const progress = course.progress || 0;
+
+  return (
     <div className="bg-bg text-white min-h-screen flex flex-col overflow-hidden h-screen">
       {/* Top Navigation */}
       <nav className="h-16 border-b border-border bg-surface flex items-center justify-between px-6 shrink-0 z-10">
