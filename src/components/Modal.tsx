@@ -1,30 +1,27 @@
-import type { Course, FutureTopic } from '../types';
+import type { Course } from '../types';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ModalProps {
   course?: Course | null;
-  future?: FutureTopic | null;
   onClose: () => void;
 }
 
-export default function Modal({ course, future, onClose }: ModalProps) {
+export default function Modal({ course, onClose }: ModalProps) {
   const navigate = useNavigate();
-  const item = course || future;
+  const item = course;
   if (!item) return null;
 
-  const isFuture = !!future;
-  const semLabel = !isFuture && course
-    ? course.sem.map(s => s.replace('sem', 'Semester ')).join(' · ')
+  const semLabel = item.sem && item.sem.length > 0
+    ? item.sem.map(s => s.replace('sem', 'Semester ')).join(' · ')
     : '🚀 Future Learning Track';
-  const accentColor = isFuture ? future!.color : '#6366f1';
+  const accentColor = item.type === 'future' ? item.color || '#10b981' : '#6366f1';
 
   return (
     <div className="fixed inset-0 z-[150] bg-bg/85 backdrop-blur-md flex items-center justify-center p-6"
          onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-animate bg-surface border border-border rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-8 relative">
-        {/* Top accent bar for future topics */}
-        {isFuture && (
+        {item.type === 'future' && (
           <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl"
                style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)` }} />
         )}
@@ -39,10 +36,10 @@ export default function Modal({ course, future, onClose }: ModalProps) {
         <p className="text-muted text-sm mb-1">
           📅 {semLabel} &nbsp;|&nbsp; 📖 {item.lessons} Lessons
         </p>
-        {!isFuture && course && (
+        {item.type !== 'future' && (
           <p className="text-muted text-xs mb-4">
-            Course Code: <span className="text-accent2 font-mono font-semibold">{course.code}</span>
-            {course.isLab && <span className="ml-2 bg-green-500/15 text-green-400 text-xs px-2 py-0.5 rounded-full">Lab</span>}
+            Course Code: <span className="text-accent2 font-mono font-semibold">{item.code}</span>
+            {item.isLab && <span className="ml-2 bg-green-500/15 text-green-400 text-xs px-2 py-0.5 rounded-full">Lab</span>}
           </p>
         )}
 
@@ -58,7 +55,6 @@ export default function Modal({ course, future, onClose }: ModalProps) {
           ))}
         </div>
 
-        {/* Tags */}
         <div className="flex gap-2 flex-wrap mb-6">
           {item.tags.map(tag => (
             <span key={tag} className="text-xs bg-surface2 text-muted px-3 py-1 rounded-lg">{tag}</span>
@@ -71,7 +67,7 @@ export default function Modal({ course, future, onClose }: ModalProps) {
             style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}bb)`, boxShadow: `0 4px 20px ${accentColor}44` }}
             onClick={() => {
               onClose();
-              navigate(isFuture ? `/future/${item.id}` : `/course/${item.id}`);
+              navigate(item.type === 'future' ? `/future/${item.id}` : `/course/${item.id}`);
             }}
           >
             Start Learning →

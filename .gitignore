@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 
-start-claude.bat
+
 
 # Editor directories and files
 .vscode/*
