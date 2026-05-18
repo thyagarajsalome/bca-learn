@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/auth';
 import { useCourseStore } from '../store/courses';
-
 import { 
   Lock, Save, FileText, Loader2, Trash2, Plus, 
   BookOpen, LayoutDashboard, Image as ImageIcon, 
@@ -45,7 +44,7 @@ export default function AdminDashboard() {
     }
     checkAdmin();
     fetchCourses();
-  }, [user]);
+  }, [user, fetchCourses]);
 
   // --- Handlers ---
 
@@ -159,9 +158,9 @@ export default function AdminDashboard() {
       {/* WP Top Admin Bar */}
       <div className="fixed top-0 left-0 right-0 h-8 bg-[#1d2327] text-[#f0f0f1] flex items-center justify-between px-4 z-50 text-[13px]">
         <div className="flex items-center gap-4">
-         <a href="/" className="hover:text-[#72aee6] transition-colors flex items-center gap-1 font-semibold">
-  <BookOpen size={14} /> BCA Learn
-</a>
+          <a href="/" className="hover:text-[#72aee6] transition-colors flex items-center gap-1 font-semibold">
+            <BookOpen size={14} /> BCA Learn
+          </a>
           <span className="text-[#a7aaad] hover:text-[#72aee6] cursor-pointer flex items-center gap-1">
             <Plus size={14}/> New
           </span>
@@ -192,7 +191,7 @@ export default function AdminDashboard() {
           ))}
           <div className="h-px bg-[#2c3338] my-2 mx-4" />
           <li>
-            <button onClick={signOut} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[#a7aaad] hover:text-red-400 hover:bg-[#2c3338] transition-colors">
+            <button onClick={() => { signOut(); window.location.href = '/'; }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[#a7aaad] hover:text-red-400 hover:bg-[#2c3338] transition-colors">
               <LogOut size={18} /> Log Out
             </button>
           </li>
@@ -220,7 +219,7 @@ export default function AdminDashboard() {
                     <li className="flex items-center gap-2"><BookOpen size={16} className="text-[#2271b1]"/> {courses.length} BCA Courses</li>
                     <li className="flex items-center gap-2"><FileText size={16} className="text-[#2271b1]"/> {futureTopics.length} Future Topics</li>
                   </ul>
-                  <p className="mt-4 text-[#646970]">WordPress 6.4.2 running BCA Learn Theme.</p>
+                  <p className="mt-4 text-[#646970]">Astro running BCA Learn Dashboard.</p>
                 </div>
               </div>
             </div>
