@@ -1,25 +1,30 @@
-import type { Course } from '../types';
+import type { Course, FutureTopic } from '../types';
 import { X } from 'lucide-react';
 
 interface ModalProps {
   course?: Course | null;
+  future?: FutureTopic | null;
   onClose: () => void;
 }
 
-export default function Modal({ course, onClose }: ModalProps) {
-  const item = course;
+export default function Modal({ course, future, onClose }: ModalProps) {
+  const item = course || future;
   if (!item) return null;
 
-  const semLabel = item.sem && item.sem.length > 0
+  const isFuture = !!future;
+  
+  // Safely extract properties depending on whether it's a Course or FutureTopic
+  const semLabel = !isFuture && 'sem' in item && item.sem && item.sem.length > 0
     ? item.sem.map(s => s.replace('sem', 'Semester ')).join(' · ')
     : '🚀 Future Learning Track';
-  const accentColor = item.type === 'future' ? item.color || '#10b981' : '#6366f1';
+    
+  const accentColor = isFuture && 'color' in item ? item.color || '#10b981' : '#6366f1';
 
   return (
     <div className="fixed inset-0 z-[150] bg-bg/85 backdrop-blur-md flex items-center justify-center p-6"
          onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-animate bg-surface border border-border rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-8 relative">
-        {item.type === 'future' && (
+        {isFuture && (
           <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl"
                style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)` }} />
         )}
@@ -34,7 +39,8 @@ export default function Modal({ course, onClose }: ModalProps) {
         <p className="text-muted text-sm mb-1">
           📅 {semLabel} &nbsp;|&nbsp; 📖 {item.lessons} Lessons
         </p>
-        {item.type !== 'future' && (
+        
+        {!isFuture && 'code' in item && (
           <p className="text-muted text-xs mb-4">
             Course Code: <span className="text-accent2 font-mono font-semibold">{item.code}</span>
             {item.isLab && <span className="ml-2 bg-green-500/15 text-green-400 text-xs px-2 py-0.5 rounded-full">Lab</span>}
@@ -66,7 +72,7 @@ export default function Modal({ course, onClose }: ModalProps) {
             onClick={() => {
               onClose();
               // Native browser navigation replaces useNavigate()
-              window.location.href = item.type === 'future' ? `/future/${item.id}` : `/course/${item.id}`;
+              window.location.href = isFuture ? `/future/${item.id}` : `/course/${item.id}`;
             }}
           >
             Start Learning →
