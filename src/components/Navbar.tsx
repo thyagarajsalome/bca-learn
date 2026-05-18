@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Search, Menu, X, BookOpen, User as UserIcon, Sun, Moon } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/ui';
 import { useAuthStore } from '../store/auth';
 
@@ -24,17 +23,17 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
     { href: '#subjects', label: 'BCA Subjects' },
     { href: '#future',   label: 'Future Learning' },
     { href: '#semesters',label: 'Semesters' },
-       { href: '#about',    label: 'About' },
+    { href: '#about',    label: 'About' },
   ];
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-bg/90 backdrop-blur-lg shadow-lg border-b border-border' : ''}`}>
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-8">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-display font-bold text-xl">
+        <a href="/" className="flex items-center gap-2 font-display font-bold text-xl">
           <BookOpen className="text-accent2" size={24} />
           <span>BCA<span className="text-accent2">Learn</span></span>
-        </Link>
+        </a>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-1 ml-auto">
@@ -60,9 +59,9 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
           {user ? (
             <div className="hidden md:flex items-center gap-4 ml-2 border-l border-border pl-4">
               {role === 'admin' && (
-                <Link to="/admin" className="text-xs font-semibold text-accent2 hover:text-white transition-colors bg-accent2/10 px-3 py-1.5 rounded-full border border-accent2/20">
+                <a href="/admin" className="text-xs font-semibold text-accent2 hover:text-white transition-colors bg-accent2/10 px-3 py-1.5 rounded-full border border-accent2/20">
                   Admin Dashboard
-                </Link>
+                </a>
               )}
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-accent2/20 flex items-center justify-center text-accent2">
@@ -104,16 +103,16 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
           {user ? (
             <>
               {role === 'admin' && (
-                <Link to="/admin" onClick={() => setMenuOpen(false)} className="px-3 py-2 text-left rounded-lg text-accent2 text-sm font-medium hover:bg-surface2 transition-all">
+                <a href="/admin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-left rounded-lg text-accent2 text-sm font-medium hover:bg-surface2 transition-all">
                   Admin Dashboard
-                </Link>
+                </a>
               )}
-              <button onClick={() => { signOut(); setMenuOpen(false); }} className="px-3 py-2 text-left rounded-lg text-red-400 text-sm font-medium hover:bg-surface2 transition-all">
+              <button onClick={() => { signOut(); setMenuOpen(false); }} className="w-full px-3 py-2 text-left rounded-lg text-red-400 text-sm font-medium hover:bg-surface2 transition-all">
                 Log out
               </button>
             </>
           ) : (
-            <button onClick={() => { setAuthModalOpen(true); setMenuOpen(false); }} className="px-3 py-2 text-left rounded-lg text-accent2 text-sm font-medium hover:bg-surface2 transition-all">
+            <button onClick={() => { setAuthModalOpen(true); setMenuOpen(false); }} className="w-full px-3 py-2 text-left rounded-lg text-accent2 text-sm font-medium hover:bg-surface2 transition-all">
               Sign In / Sign Up
             </button>
           )}

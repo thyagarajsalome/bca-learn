@@ -1,0 +1,8 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AdminDashboard from '../pages/AdminDashboard.tsx';
+---
+
+<Layout title="Admin Dashboard | BCA Learn">
+  <AdminDashboard client:only="react" />
+</Layout>
