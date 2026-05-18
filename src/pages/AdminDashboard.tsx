@@ -121,52 +121,54 @@ export default function AdminDashboard() {
 
         {/* Tab 1: Course Builder */}
         {activeTab === 'courses' && (
-          <form onSubmit={handleSaveCourse} className="bg-surface border border-border p-6 rounded-2xl space-y-4">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><BookOpen size={20}/> Create or Edit Course Structure</h2>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-muted uppercase mb-2">Course ID (e.g., BCS11)</label>
-                <input required type="text" value={cId} onChange={e => setCId(e.target.value)} className="w-full bg-surface2 border border-border rounded-xl px-4 py-3 text-sm focus:border-accent2" />
-              </div>
-              <div>
-                <label className="block text-xs text-muted uppercase mb-2">Course Title</label>
-                <input required type="text" value={cTitle} onChange={e => setCTitle(e.target.value)} className="w-full bg-surface2 border border-border rounded-xl px-4 py-3 text-sm focus:border-accent2" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs text-muted uppercase mb-2">Type</label>
-              <select value={cType} onChange={e => setCType(e.target.value)} className="w-full bg-surface2 border border-border rounded-xl px-4 py-3 text-sm focus:border-accent2">
-                <option value="bca">BCA Official Subject</option>
-                <option value="future">Future Learning Track</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs text-muted uppercase mb-2">Modules / Topics (Comma Separated)</label>
-              <textarea required value={cTopics} onChange={e => setCTopics(e.target.value)} placeholder="Introduction, Hardware, Software, Networking..." className="w-full bg-surface2 border border-border rounded-xl p-4 text-sm focus:border-accent2" />
-              <p className="text-xs text-muted mt-1">This defines the structured order of your modules. "Introduction" will be Index 0, "Hardware" Index 1, etc.</p>
-            </div>
-
-            <button type="submit" disabled={saving} className="w-full py-4 mt-4 rounded-xl text-white font-bold bg-accent hover:bg-accent2 transition-all flex justify-center items-center gap-2">
-              {saving ? <Loader2 size={18} className="animate-spin" /> : <><Plus size={18} /> Save Course Structure</>}
-            </button>
-          </form>
-
-          <div className="bg-surface border border-border p-6 rounded-2xl mt-8">
-            <h2 className="text-xl font-bold mb-4">Existing Courses</h2>
-            <div className="space-y-2">
-              {allCourses.map(c => (
-                <div key={c.id} className="flex items-center justify-between p-3 bg-surface2 border border-border rounded-xl">
-                  <span className="text-sm font-medium">{c.title} ({c.id})</span>
-                  <button onClick={() => handleDeleteCourse(c.id)} className="p-2 text-muted hover:text-red-400 transition-colors">
-                    <Trash2 size={16} />
-                  </button>
+          <>
+            <form onSubmit={handleSaveCourse} className="bg-surface border border-border p-6 rounded-2xl space-y-4">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><BookOpen size={20}/> Create or Edit Course Structure</h2>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-muted uppercase mb-2">Course ID (e.g., BCS11)</label>
+                  <input required type="text" value={cId} onChange={e => setCId(e.target.value)} className="w-full bg-surface2 border border-border rounded-xl px-4 py-3 text-sm focus:border-accent2" />
                 </div>
-              ))}
+                <div>
+                  <label className="block text-xs text-muted uppercase mb-2">Course Title</label>
+                  <input required type="text" value={cTitle} onChange={e => setCTitle(e.target.value)} className="w-full bg-surface2 border border-border rounded-xl px-4 py-3 text-sm focus:border-accent2" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-muted uppercase mb-2">Type</label>
+                <select value={cType} onChange={e => setCType(e.target.value)} className="w-full bg-surface2 border border-border rounded-xl px-4 py-3 text-sm focus:border-accent2">
+                  <option value="bca">BCA Official Subject</option>
+                  <option value="future">Future Learning Track</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs text-muted uppercase mb-2">Modules / Topics (Comma Separated)</label>
+                <textarea required value={cTopics} onChange={e => setCTopics(e.target.value)} placeholder="Introduction, Hardware, Software, Networking..." className="w-full bg-surface2 border border-border rounded-xl p-4 text-sm focus:border-accent2" />
+                <p className="text-xs text-muted mt-1">This defines the structured order of your modules. "Introduction" will be Index 0, "Hardware" Index 1, etc.</p>
+              </div>
+
+              <button type="submit" disabled={saving} className="w-full py-4 mt-4 rounded-xl text-white font-bold bg-accent hover:bg-accent2 transition-all flex justify-center items-center gap-2">
+                {saving ? <Loader2 size={18} className="animate-spin" /> : <><Plus size={18} /> Save Course Structure</>}
+              </button>
+            </form>
+
+            <div className="bg-surface border border-border p-6 rounded-2xl mt-8">
+              <h2 className="text-xl font-bold mb-4">Existing Courses</h2>
+              <div className="space-y-2">
+                {allCourses.map(c => (
+                  <div key={c.id} className="flex items-center justify-between p-3 bg-surface2 border border-border rounded-xl">
+                    <span className="text-sm font-medium">{c.title} ({c.id})</span>
+                    <button onClick={() => handleDeleteCourse(c.id)} className="p-2 text-muted hover:text-red-400 transition-colors">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* Tab 2: Lesson Editor */}
