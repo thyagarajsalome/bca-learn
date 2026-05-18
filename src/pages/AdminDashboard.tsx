@@ -82,16 +82,37 @@ export default function AdminDashboard() {
     e.preventDefault();
     setSaving(true);
     try {
-      const { data: existing } = await supabase.from('lessons')
-        .select('id').eq('course_id', courseId).eq('module_idx', parseInt(moduleIdx)).eq('lesson_idx', parseInt(lessonIdx)).maybeSingle();
+      // 1. Fetch existing lesson to see if we should insert or update
+      const { data: existing, error: fetchError } = await supabase.from('lessons')
+        .select('id')
+        .eq('course_id', courseId)
+        .eq('module_idx', parseInt(moduleIdx))
+        .eq('lesson_idx', parseInt(lessonIdx))
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
 
       if (existing) {
-        await supabase.from('lessons').update({ title, content }).eq('id', existing.id);
+        // 2. Update existing lesson
+        const { error: updateError } = await supabase.from('lessons')
+          .update({ title, content })
+          .eq('id', existing.id);
+          
+        if (updateError) throw updateError;
       } else {
-        await supabase.from('lessons').insert({
-          course_id: courseId, module_idx: parseInt(moduleIdx), lesson_idx: parseInt(lessonIdx), title, content
-        });
+        // 3. Insert new lesson
+        const { error: insertError } = await supabase.from('lessons')
+          .insert({
+            course_id: courseId, 
+            module_idx: parseInt(moduleIdx), 
+            lesson_idx: parseInt(lessonIdx), 
+            title, 
+            content
+          });
+          
+        if (insertError) throw insertError;
       }
+      
       setMessage('Lesson saved successfully!');
     } catch (err: any) {
       setMessage(`Error: ${err.message}`);
@@ -117,7 +138,7 @@ export default function AdminDashboard() {
           <button onClick={() => {setActiveTab('lessons'); setMessage('');}} className={`px-6 py-3 rounded-xl font-bold ${activeTab === 'lessons' ? 'bg-accent text-white' : 'bg-surface2 text-muted'}`}>2. Manage Lessons</button>
         </div>
 
-        {message && <div className="mb-6 p-4 rounded-xl text-sm font-semibold bg-green-400/10 text-green-400">{message}</div>}
+        {message && <div className={`mb-6 p-4 rounded-xl text-sm font-semibold ${message.startsWith('Error') ? 'bg-red-400/10 text-red-400' : 'bg-green-400/10 text-green-400'}`}>{message}</div>}
 
         {/* Tab 1: Course Builder */}
         {activeTab === 'courses' && (
