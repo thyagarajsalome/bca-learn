@@ -1,6 +1,5 @@
 import type { Course } from '../types';
 import { X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface ModalProps {
   course?: Course | null;
@@ -8,7 +7,6 @@ interface ModalProps {
 }
 
 export default function Modal({ course, onClose }: ModalProps) {
-  const navigate = useNavigate();
   const item = course;
   if (!item) return null;
 
@@ -67,7 +65,8 @@ export default function Modal({ course, onClose }: ModalProps) {
             style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}bb)`, boxShadow: `0 4px 20px ${accentColor}44` }}
             onClick={() => {
               onClose();
-              navigate(item.type === 'future' ? `/future/${item.id}` : `/course/${item.id}`);
+              // Native browser navigation replaces useNavigate()
+              window.location.href = item.type === 'future' ? `/future/${item.id}` : `/course/${item.id}`;
             }}
           >
             Start Learning →

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/auth';
 import { useCourseStore } from '../store/courses';
-import { Link } from 'react-router-dom';
+
 import { 
   Lock, Save, FileText, Loader2, Trash2, Plus, 
   BookOpen, LayoutDashboard, Image as ImageIcon, 
@@ -159,9 +159,9 @@ export default function AdminDashboard() {
       {/* WP Top Admin Bar */}
       <div className="fixed top-0 left-0 right-0 h-8 bg-[#1d2327] text-[#f0f0f1] flex items-center justify-between px-4 z-50 text-[13px]">
         <div className="flex items-center gap-4">
-          <Link to="/" className="hover:text-[#72aee6] transition-colors flex items-center gap-1 font-semibold">
-            <BookOpen size={14} /> BCA Learn
-          </Link>
+         <a href="/" className="hover:text-[#72aee6] transition-colors flex items-center gap-1 font-semibold">
+  <BookOpen size={14} /> BCA Learn
+</a>
           <span className="text-[#a7aaad] hover:text-[#72aee6] cursor-pointer flex items-center gap-1">
             <Plus size={14}/> New
           </span>
